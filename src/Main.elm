@@ -8,7 +8,7 @@ import Element.Input as Input
 import Html exposing (Html)
 import Random exposing (Generator)
 import Random.List
-import Set exposing (Set)
+import Set
 
 
 main : Program () Model Msg
@@ -22,12 +22,12 @@ main =
 
 
 type alias Model =
-    Maybe Multiplication
+    { multiplication : Maybe Multiplication }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Nothing, Random.generate GotMultiplication generator )
+    ( { multiplication = Nothing }, Random.generate GotMultiplication generator )
 
 
 type Msg
@@ -39,13 +39,13 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotMultiplication multiplication ->
-            ( Just multiplication, Cmd.none )
+            ( { multiplication = Just multiplication }, Cmd.none )
 
         Select answer ->
-            case model of
+            case model.multiplication of
                 Just (Multiplication a b _) ->
                     if answer == a * b then
-                        ( Nothing, Random.generate GotMultiplication generator )
+                        ( { multiplication = Nothing }, Random.generate GotMultiplication generator )
 
                     else
                         ( model, Cmd.none )
@@ -56,14 +56,8 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    Element.layoutWith
-        { options =
-            []
-        }
-        [ Font.size 48
-        ]
-    <|
-        case model of
+    Element.layoutWith { options = [] } [ Font.size 48 ] <|
+        case model.multiplication of
             Just (Multiplication table int list) ->
                 Element.column
                     [ Element.centerX
@@ -103,9 +97,7 @@ generator =
         unique =
             Set.fromList >> Set.toList
     in
-    Random.map2 (\table int -> ( table, int ))
-        (Random.int 1 10)
-        (Random.int 1 10)
+    Random.map2 (\table int -> ( table, int )) (Random.int 1 10) (Random.int 1 10)
         |> Random.andThen
             (\( a, b ) ->
                 Random.List.shuffle (answers a b |> unique)
