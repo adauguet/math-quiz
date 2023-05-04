@@ -1,7 +1,8 @@
 module Main exposing (generator, main)
 
 import Browser
-import Element
+import Element exposing (Element)
+import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
@@ -22,36 +23,63 @@ main =
 
 
 type alias Model =
-    { multiplication : Maybe Multiplication }
+    { multiplication : Maybe Multiplication
+    , tables : NonEmpty Int
+    }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { multiplication = Nothing }, Random.generate GotMultiplication generator )
+    let
+        tables =
+            NonEmpty 1 [ 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+    in
+    ( { multiplication = Nothing
+      , tables = tables
+      }
+    , Random.generate GotMultiplication (generator tables)
+    )
 
 
 type Msg
     = GotMultiplication Multiplication
     | Select Int
+    | RemoveTable Int
+    | AddTable Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotMultiplication multiplication ->
-            ( { multiplication = Just multiplication }, Cmd.none )
+            ( { model | multiplication = Just multiplication }, Cmd.none )
 
         Select answer ->
             case model.multiplication of
                 Just (Multiplication a b _) ->
                     if answer == a * b then
-                        ( { multiplication = Nothing }, Random.generate GotMultiplication generator )
+                        ( { model | multiplication = Nothing }, Random.generate GotMultiplication (generator model.tables) )
 
                     else
                         ( model, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
+
+        RemoveTable table ->
+            case filter (\x -> x /= table) model.tables of
+                Just tables ->
+                    ( { model | tables = tables }, Random.generate GotMultiplication (generator tables) )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        AddTable table ->
+            let
+                tables =
+                    append table model.tables
+            in
+            ( { model | tables = tables }, Random.generate GotMultiplication (generator tables) )
 
 
 view : Model -> Html Msg
@@ -64,7 +92,8 @@ view model =
                     , Element.centerY
                     , Element.spacing 50
                     ]
-                    [ Element.text <| String.fromInt table ++ " x " ++ String.fromInt int
+                    [ tablesView model.tables
+                    , Element.text <| String.fromInt table ++ " x " ++ String.fromInt int ++ " ="
                     , Element.row [ Element.spacing 50 ]
                         (List.map
                             (\n ->
@@ -87,17 +116,51 @@ view model =
                 Element.text ""
 
 
+tablesView : NonEmpty Int -> Element Msg
+tablesView tables =
+    Element.row [ Element.spacing 10 ]
+        (List.map
+            (\int ->
+                if member int tables then
+                    Input.button
+                        [ Element.width (Element.px 100)
+                        , Element.height (Element.px 80)
+                        , Border.rounded 5
+                        , Font.center
+                        , Background.color (Element.rgb255 0 0 255)
+                        , Font.color (Element.rgb255 255 255 255)
+                        ]
+                        { onPress = Just <| RemoveTable int
+                        , label = Element.text <| String.fromInt int
+                        }
+
+                else
+                    Input.button
+                        [ Element.width (Element.px 100)
+                        , Element.height (Element.px 80)
+                        , Border.width 1
+                        , Border.rounded 5
+                        , Font.center
+                        ]
+                        { onPress = Just <| AddTable int
+                        , label = Element.text <| String.fromInt int
+                        }
+            )
+            (List.range 1 10)
+        )
+
+
 type Multiplication
     = Multiplication Int Int (List Int)
 
 
-generator : Generator Multiplication
-generator =
+generator : NonEmpty Int -> Generator Multiplication
+generator (NonEmpty n ns) =
     let
         unique =
             Set.fromList >> Set.toList
     in
-    Random.map2 (\table int -> ( table, int )) (Random.int 1 10) (Random.int 1 10)
+    Random.map2 (\table int -> ( table, int )) (Random.uniform n ns) (Random.int 1 10)
         |> Random.andThen
             (\( a, b ) ->
                 Random.List.shuffle (answers a b |> unique)
@@ -116,3 +179,41 @@ answers a b =
     , (a - 1) * b
     , (a + 1) * b
     ]
+
+
+
+-- NonEmpty
+
+
+type NonEmpty a
+    = NonEmpty a (List a)
+
+
+member : a -> NonEmpty a -> Bool
+member a (NonEmpty x xs) =
+    a == x || List.member a xs
+
+
+fromList : List a -> Maybe (NonEmpty a)
+fromList list =
+    case list of
+        x :: xs ->
+            Just (NonEmpty x xs)
+
+        _ ->
+            Nothing
+
+
+toList : NonEmpty a -> List a
+toList (NonEmpty x xs) =
+    x :: xs
+
+
+filter : (a -> Bool) -> NonEmpty a -> Maybe (NonEmpty a)
+filter isIncluded =
+    toList >> List.filter isIncluded >> fromList
+
+
+append : a -> NonEmpty a -> NonEmpty a
+append a (NonEmpty x xs) =
+    NonEmpty a (x :: xs)
