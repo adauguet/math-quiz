@@ -1,4 +1,4 @@
-module Main exposing (generator, main)
+module Main exposing (main)
 
 import Browser
 import Element exposing (Element)
@@ -7,10 +7,9 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
+import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
-import Random exposing (Generator)
-import Random.List
-import Set
+import Random
 
 
 main : Program () Model Msg
@@ -48,8 +47,13 @@ init _ =
       , score = 0
       , lives = 3
       }
-    , Random.generate GotMultiplication (generator tables)
+    , generateMultiplication tables
     )
+
+
+generateMultiplication : NonEmpty Int -> Cmd Msg
+generateMultiplication tables =
+    Random.generate GotMultiplication (Multiplication.generator tables)
 
 
 type Msg
@@ -77,7 +81,7 @@ update msg model =
                             | state = Loading
                             , score = model.score + 1
                           }
-                        , Random.generate GotMultiplication (generator model.tables)
+                        , generateMultiplication model.tables
                         )
 
                     else if model.lives > 1 then
@@ -92,7 +96,7 @@ update msg model =
         RemoveTable table ->
             case NonEmpty.filter (\x -> x /= table) model.tables of
                 Just tables ->
-                    ( { model | tables = tables, score = 0, lives = 5 }, Random.generate GotMultiplication (generator tables) )
+                    ( { model | tables = tables, score = 0, lives = 5 }, generateMultiplication tables )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -102,7 +106,7 @@ update msg model =
                 tables =
                     NonEmpty.append table model.tables
             in
-            ( { model | tables = tables, score = 0, lives = 5 }, Random.generate GotMultiplication (generator tables) )
+            ( { model | tables = tables, score = 0, lives = 5 }, generateMultiplication tables )
 
         Reset ->
             ( { state = Loading
@@ -110,7 +114,7 @@ update msg model =
               , score = 0
               , lives = 5
               }
-            , Random.generate GotMultiplication (generator model.tables)
+            , generateMultiplication model.tables
             )
 
 
@@ -222,34 +226,3 @@ tablesView tables =
             )
             (List.range 1 10)
         )
-
-
-type Multiplication
-    = Multiplication Int Int (List Int)
-
-
-generator : NonEmpty Int -> Generator Multiplication
-generator nonEmpty =
-    let
-        unique =
-            Set.fromList >> Set.toList
-    in
-    Random.map2 (\table int -> ( table, int )) (NonEmpty.generator nonEmpty) (Random.int 1 10)
-        |> Random.andThen
-            (\( a, b ) ->
-                Random.List.shuffle (answers a b |> unique)
-                    |> Random.andThen (\list -> Random.List.shuffle (a * b :: (list |> List.take 3) |> unique))
-                    |> Random.map (\list -> Multiplication a b list)
-            )
-
-
-answers : Int -> Int -> List Int
-answers a b =
-    [ a * b - 1
-    , a * (b - 1)
-    , a * (b + 1)
-    , a * b + 1
-    , a + b
-    , (a - 1) * b
-    , (a + 1) * b
-    ]
