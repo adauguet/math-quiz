@@ -1,5 +1,8 @@
 # TODO
 
-- Keyboard support
 - Against the clock mode
+
+## Not now
+
+- Keyboard support
 - Styling

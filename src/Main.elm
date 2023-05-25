@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import AgainstTheClock
 import Browser
 import Element exposing (Element)
 import Element.Background as Background
@@ -30,7 +31,7 @@ type alias Model =
 
 type Page
     = Home
-      -- | AgainstTheClock AgainstTheClockModel
+    | AgainstTheClock AgainstTheClock.Model
     | Lives Lives.Model
     | Settings
 
@@ -46,6 +47,7 @@ init _ =
 
 type Msg
     = LivesMsg Lives.Msg
+    | AgainstTheClockMsg AgainstTheClock.Msg
     | ClickLives
     | ClickAgainstTheClock
     | RemoveTable Int
@@ -68,6 +70,18 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        AgainstTheClockMsg againstTheClockMsg ->
+            case model.page of
+                AgainstTheClock againstTheClockModel ->
+                    let
+                        ( m, cmd ) =
+                            AgainstTheClock.update againstTheClockMsg againstTheClockModel
+                    in
+                    ( { model | page = AgainstTheClock m }, Cmd.map AgainstTheClockMsg cmd )
+
+                _ ->
+                    ( model, Cmd.none )
+
         ClickLives ->
             let
                 ( m, cmd ) =
@@ -76,7 +90,11 @@ update msg model =
             ( { model | page = Lives m }, Cmd.map LivesMsg cmd )
 
         ClickAgainstTheClock ->
-            ( model, Cmd.none )
+            let
+                ( m, cmd ) =
+                    AgainstTheClock.init model.tables
+            in
+            ( { model | page = AgainstTheClock m }, Cmd.map AgainstTheClockMsg cmd )
 
         RemoveTable table ->
             case NonEmpty.filter (\x -> x /= table) model.tables of
@@ -134,6 +152,14 @@ view model =
                     }
                     livesModel
 
+            AgainstTheClock againstTheClockModel ->
+                AgainstTheClock.view
+                    { toParentMsg = AgainstTheClockMsg
+                    , onClickRestart = ClickAgainstTheClock
+                    , onClickHome = ClickHome
+                    }
+                    againstTheClockModel
+
             Settings ->
                 Element.text "Settings"
 
@@ -176,11 +202,3 @@ tablesView tables =
             )
             (List.range 1 10)
         )
-
-
-
--- type alias AgainstTheClockModel =
---     { state : State
---     , tables : NonEmpty Int
---     , score : Int
---     }
