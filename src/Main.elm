@@ -30,6 +30,11 @@ type alias Model =
     }
 
 
+type Mode
+    = AgainstTheClock
+    | Lives
+
+
 type State
     = Loading
     | Playing Multiplication
@@ -49,11 +54,6 @@ init _ =
       }
     , generateMultiplication tables
     )
-
-
-generateMultiplication : NonEmpty Int -> Cmd Msg
-generateMultiplication tables =
-    Random.generate GotMultiplication (Multiplication.generator tables)
 
 
 type Msg
@@ -116,6 +116,11 @@ update msg model =
               }
             , generateMultiplication model.tables
             )
+
+
+generateMultiplication : NonEmpty Int -> Cmd Msg
+generateMultiplication tables =
+    Random.generate GotMultiplication (Multiplication.generator tables)
 
 
 view : Model -> Html Msg
