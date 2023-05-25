@@ -7,9 +7,9 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
+import Lives
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
-import Random
 
 
 main : Program () Model Msg
@@ -23,80 +23,65 @@ main =
 
 
 type alias Model =
-    { state : State
+    { page : Page
     , tables : NonEmpty Int
-    , score : Int
-    , lives : Int
     }
 
 
-type Mode
-    = AgainstTheClock
-    | Lives
-
-
-type State
-    = Loading
-    | Playing Multiplication
-    | GameOver
+type Page
+    = Home
+      -- | AgainstTheClock AgainstTheClockModel
+    | Lives Lives.Model
+    | Settings
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    let
-        tables =
-            NonEmpty.make 1 [ 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
-    in
-    ( { state = Loading
-      , tables = tables
-      , score = 0
-      , lives = 3
+    ( { page = Home
+      , tables = NonEmpty.make 1 [ 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
       }
-    , generateMultiplication tables
+    , Cmd.none
     )
 
 
 type Msg
-    = GotMultiplication Multiplication
-    | Select Int
+    = LivesMsg Lives.Msg
+    | ClickLives
+    | ClickAgainstTheClock
     | RemoveTable Int
     | AddTable Int
-    | Reset
+    | ClickHome
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotMultiplication multiplication ->
-            ( { model | state = Playing multiplication }, Cmd.none )
+        LivesMsg livesMsg ->
+            case model.page of
+                Lives livesModel ->
+                    let
+                        ( m, cmd ) =
+                            Lives.update livesMsg livesModel
+                    in
+                    ( { model | page = Lives m }, Cmd.map LivesMsg cmd )
 
-        Select answer ->
-            case model.state of
-                Loading ->
+                _ ->
                     ( model, Cmd.none )
 
-                Playing (Multiplication a b _) ->
-                    if answer == a * b then
-                        ( { model
-                            | state = Loading
-                            , score = model.score + 1
-                          }
-                        , generateMultiplication model.tables
-                        )
+        ClickLives ->
+            let
+                ( m, cmd ) =
+                    Lives.init model.tables
+            in
+            ( { model | page = Lives m }, Cmd.map LivesMsg cmd )
 
-                    else if model.lives > 1 then
-                        ( { model | lives = model.lives - 1 }, Cmd.none )
-
-                    else
-                        ( { model | state = GameOver }, Cmd.none )
-
-                GameOver ->
-                    ( model, Cmd.none )
+        ClickAgainstTheClock ->
+            ( model, Cmd.none )
 
         RemoveTable table ->
             case NonEmpty.filter (\x -> x /= table) model.tables of
                 Just tables ->
-                    ( { model | tables = tables, score = 0, lives = 5 }, generateMultiplication tables )
+                    ( { model | tables = tables }, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -106,101 +91,61 @@ update msg model =
                 tables =
                     NonEmpty.append table model.tables
             in
-            ( { model | tables = tables, score = 0, lives = 5 }, generateMultiplication tables )
+            ( { model | tables = tables }, Cmd.none )
 
-        Reset ->
-            ( { state = Loading
-              , tables = model.tables
-              , score = 0
-              , lives = 5
-              }
-            , generateMultiplication model.tables
-            )
-
-
-generateMultiplication : NonEmpty Int -> Cmd Msg
-generateMultiplication tables =
-    Random.generate GotMultiplication (Multiplication.generator tables)
+        ClickHome ->
+            ( { model | page = Home }, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
-    Element.layoutWith { options = [] } [ Font.size 48 ] <|
-        case model.state of
-            Loading ->
-                Element.none
-
-            Playing (Multiplication table int list) ->
-                Element.row
-                    [ Element.spacing 50
-                    , Element.width Element.fill
-                    , Element.height Element.fill
-                    ]
-                    [ Element.el [ Element.paddingXY 50 50 ] <| tablesView model.tables
-                    , Element.column
-                        [ Element.spacing 100
-                        , Element.centerX
-                        , Element.centerY
-                        ]
-                        [ Element.row
-                            [ Element.spacing 50
-                            , Font.size 32
-                            , Element.width Element.fill
-                            ]
-                            [ Element.row [] <| List.repeat model.lives (Element.text "❤️")
-                            , Element.el [ Element.alignRight ] <|
-                                Element.text <|
-                                    String.fromInt model.score
-                            ]
-                        , Element.text <| String.fromInt table ++ " x " ++ String.fromInt int ++ " ="
-                        , Element.row [ Element.spacing 50 ]
-                            (List.map
-                                (\n ->
-                                    Input.button
-                                        [ Element.width (Element.px 100)
-                                        , Element.height (Element.px 80)
-                                        , Border.width 1
-                                        , Border.rounded 5
-                                        , Font.center
-                                        ]
-                                        { onPress = Just (Select n)
-                                        , label = Element.text <| String.fromInt n
-                                        }
-                                )
-                                list
-                            )
-                        ]
-                    ]
-
-            GameOver ->
+    Element.layout [] <|
+        case model.page of
+            Home ->
                 Element.column
                     [ Element.centerX
                     , Element.centerY
-                    , Element.spacing 50
+                    , Element.spacing 100
                     ]
-                    [ Element.el [ Font.heavy ] <| Element.text "GAME OVER"
-                    , Element.el [ Font.size 30, Element.centerX ] <| Element.text <| "Score : " ++ String.fromInt model.score
+                    [ tablesView model.tables
                     , Input.button
-                        [ Font.size 30
-                        , Element.centerX
-                        , Border.width 1
+                        [ Border.width 1
                         , Border.rounded 3
-                        , Element.paddingXY 20 10
+                        , Element.paddingXY 12 6
                         ]
-                        { onPress = Just Reset
-                        , label = Element.text "Recommencer"
+                        { onPress = Just ClickLives
+                        , label = Element.text "3 vies"
+                        }
+                    , Input.button
+                        [ Border.width 1
+                        , Border.rounded 3
+                        , Element.paddingXY 12 6
+                        ]
+                        { onPress = Just ClickAgainstTheClock
+                        , label = Element.text "Contre la montre"
                         }
                     ]
+
+            Lives livesModel ->
+                Lives.view
+                    { toParentMsg = LivesMsg
+                    , onClickRestart = ClickLives
+                    , onClickHome = ClickHome
+                    }
+                    livesModel
+
+            Settings ->
+                Element.text "Settings"
 
 
 tablesView : NonEmpty Int -> Element Msg
 tablesView tables =
-    Element.column [ Element.spacing 10 ]
+    Element.row [ Element.spacing 10 ]
         (List.map
             (\int ->
                 let
                     attributes =
-                        [ Element.width (Element.px 80)
+                        [ Element.width (Element.px 60)
                         , Element.height (Element.px 50)
                         , Border.rounded 5
                         , Font.center
@@ -231,3 +176,11 @@ tablesView tables =
             )
             (List.range 1 10)
         )
+
+
+
+-- type alias AgainstTheClockModel =
+--     { state : State
+--     , tables : NonEmpty Int
+--     , score : Int
+--     }
