@@ -7,12 +7,14 @@ import Element.Input as Input
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
 import Random
+import Time
 
 
 type alias Model =
     { state : State
     , tables : NonEmpty Int
     , score : Int
+    , remainingTime : Int
     }
 
 
@@ -27,6 +29,7 @@ init tables =
     ( { state = Loading
       , tables = tables
       , score = 0
+      , remainingTime = 60
       }
     , generateMultiplication tables
     )
@@ -35,6 +38,7 @@ init tables =
 type Msg
     = GotMultiplication Multiplication
     | Select Int
+    | Tick
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -62,6 +66,17 @@ update msg model =
 
                 GameOver ->
                     ( model, Cmd.none )
+
+        Tick ->
+            let
+                newTime =
+                    model.remainingTime - 1
+            in
+            if newTime <= 0 then
+                ( { model | state = GameOver }, Cmd.none )
+
+            else
+                ( { model | remainingTime = newTime }, Cmd.none )
 
 
 generateMultiplication : NonEmpty Int -> Cmd Msg
@@ -96,7 +111,8 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     , Font.size 32
                     , Element.width Element.fill
                     ]
-                    [ Element.el [ Element.alignRight ] <|
+                    [ Element.text (String.fromInt model.remainingTime)
+                    , Element.el [ Element.alignRight ] <|
                         Element.text <|
                             String.fromInt model.score
                     ]
@@ -176,3 +192,8 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     , label = Element.text "Menu principal"
                     }
                 ]
+
+
+subscriptions : Sub Msg
+subscriptions =
+    Time.every 1000 (\_ -> Tick)

@@ -19,7 +19,7 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
 
 
@@ -202,3 +202,13 @@ tablesView tables =
             )
             (List.range 1 10)
         )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.page of
+        AgainstTheClock _ ->
+            AgainstTheClock.subscriptions |> Sub.map AgainstTheClockMsg
+
+        _ ->
+            Sub.none
