@@ -144,12 +144,13 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     [ Font.heavy
                     , Element.centerX
                     , Font.color <| Element.rgb255 240 0 0
-                    , Font.size 48
+                    , Font.size 64
                     , Font.shadow
                         { offset = ( 1, 2 )
                         , blur = 2
                         , color = Element.rgb255 100 100 100
                         }
+                    , Font.family [ Font.typeface "VT323" ]
                     ]
                     (Element.text "GAME OVER")
                 , Element.el
