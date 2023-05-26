@@ -1,7 +1,9 @@
 module Lives exposing (..)
 
 import Element exposing (Element)
+import Element.Background as Background
 import Element.Border as Border
+import Element.Extra as Element
 import Element.Font as Font
 import Element.Input as Input
 import Multiplication exposing (Multiplication(..))
@@ -113,9 +115,29 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                             Input.button
                                 [ Element.width (Element.px 100)
                                 , Element.height (Element.px 80)
-                                , Border.width 1
                                 , Border.rounded 5
                                 , Font.center
+                                , Font.size 32
+                                , Font.center
+                                , Element.centerX
+                                , Border.rounded 12
+                                , Background.color <| Element.hsl 212 1 0.47
+                                , Font.color <| Element.white
+                                , Element.mouseOver
+                                    [ Element.moveUp 2
+                                    , Border.shadow
+                                        { offset = ( 0, 6 )
+                                        , size = 0
+                                        , blur = 0
+                                        , color = Element.hsl 207 1 0.32
+                                        }
+                                    ]
+                                , Border.shadow
+                                    { offset = ( 0, 4 )
+                                    , size = 0
+                                    , blur = 0
+                                    , color = Element.hsl 207 1 0.32
+                                    }
                                 ]
                                 { onPress = Just <| toParentMsg (Select n)
                                 , label = Element.text <| String.fromInt n
@@ -124,10 +146,30 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                         list
                     )
                 , Input.button
-                    [ Font.size 30
-                    , Border.width 1
-                    , Border.rounded 3
-                    , Element.paddingXY 20 10
+                    [ Font.size 32
+
+                    -- , Element.width Element.fill
+                    , Font.center
+                    , Element.centerX
+                    , Border.rounded 12
+                    , Element.paddingXY 42 12
+                    , Background.color <| Element.hsl 345 1 0.47
+                    , Font.color Element.white
+                    , Element.mouseOver
+                        [ Element.moveUp 2
+                        , Border.shadow
+                            { offset = ( 0, 6 )
+                            , size = 0
+                            , blur = 0
+                            , color = Element.hsl 340 1 0.32
+                            }
+                        ]
+                    , Border.shadow
+                        { offset = ( 0, 4 )
+                        , size = 0
+                        , blur = 0
+                        , color = Element.hsl 340 1 0.32
+                        }
                     ]
                     { onPress = Just onClickHome
                     , label = Element.text "Quitter"
@@ -143,12 +185,12 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                 [ Element.el
                     [ Font.heavy
                     , Element.centerX
-                    , Font.color <| Element.rgb255 240 0 0
+                    , Font.color <| Element.hsl 345 1 0.47
                     , Font.size 64
                     , Font.shadow
                         { offset = ( 1, 2 )
                         , blur = 2
-                        , color = Element.rgb255 100 100 100
+                        , color = Element.gray
                         }
                     , Font.family [ Font.typeface "VT323" ]
                     ]

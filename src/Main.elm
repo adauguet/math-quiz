@@ -5,6 +5,7 @@ import Browser
 import Element exposing (Element)
 import Element.Background as Background
 import Element.Border as Border
+import Element.Extra as Element
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
@@ -117,7 +118,19 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    Element.layout [] <|
+    Element.layoutWith
+        { options =
+            [ Element.focusStyle
+                { borderColor = Nothing
+                , backgroundColor = Nothing
+                , shadow = Nothing
+                }
+            ]
+        }
+        [ Font.family [ Font.typeface "Bubblegum Sans" ]
+        , Font.size 32
+        ]
+    <|
         case model.page of
             Home ->
                 Element.column
@@ -166,7 +179,8 @@ view model =
 
 tablesView : NonEmpty Int -> Element Msg
 tablesView tables =
-    Element.row [ Element.spacing 10 ]
+    Element.row
+        [ Element.spacing 10 ]
         (List.map
             (\int ->
                 let
@@ -176,26 +190,19 @@ tablesView tables =
                         , Border.rounded 5
                         , Font.center
                         , Font.size 24
+                        , Font.color Element.white
                         ]
                 in
                 if NonEmpty.member int tables then
                     Input.button
-                        (attributes
-                            ++ [ Background.color (Element.rgb255 0 0 255)
-                               , Font.color (Element.rgb255 255 255 255)
-                               ]
-                        )
+                        (Background.color (Element.hsl 217 1 0.5) :: attributes)
                         { onPress = Just <| RemoveTable int
                         , label = Element.text <| String.fromInt int
                         }
 
                 else
                     Input.button
-                        (attributes
-                            ++ [ Background.color (Element.rgb255 200 200 200)
-                               , Font.color (Element.rgb255 255 255 255)
-                               ]
-                        )
+                        (Background.color Element.gray :: attributes)
                         { onPress = Just <| AddTable int
                         , label = Element.text <| String.fromInt int
                         }
