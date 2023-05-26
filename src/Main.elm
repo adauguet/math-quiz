@@ -6,6 +6,7 @@ import Element exposing (Element)
 import Element.Extra as Element
 import Element.Font as Font
 import Html exposing (Html)
+import List.Extra
 import Lives
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
@@ -134,21 +135,26 @@ view model =
                 Element.column
                     [ Element.centerX
                     , Element.centerY
-                    , Element.spacing 100
+                    , Element.spacing 50
                     ]
                     [ tablesView model.tables
-                    , UI.button []
-                        { onPress = ClickLives
-                        , label = "3 vies"
-                        , backgroundColor = Element.hsl 212 1 0.47
-                        , shadowColor = Element.hsl 207 1 0.32
-                        }
-                    , UI.button []
-                        { onPress = ClickAgainstTheClock
-                        , label = "Contre la montre"
-                        , backgroundColor = Element.hsl 212 1 0.47
-                        , shadowColor = Element.hsl 207 1 0.32
-                        }
+                    , Element.column
+                        [ Element.width Element.fill
+                        , Element.spacing 20
+                        ]
+                        [ UI.button [ Element.width Element.fill ]
+                            { onPress = ClickLives
+                            , label = "3 vies"
+                            , backgroundColor = Element.hsl 212 1 0.47
+                            , shadowColor = Element.hsl 207 1 0.32
+                            }
+                        , UI.button [ Element.width Element.fill ]
+                            { onPress = ClickAgainstTheClock
+                            , label = "Contre la montre"
+                            , backgroundColor = Element.hsl 212 1 0.47
+                            , shadowColor = Element.hsl 207 1 0.32
+                            }
+                        ]
                     ]
 
             Lives livesModel ->
@@ -173,27 +179,32 @@ view model =
 
 tablesView : NonEmpty Int -> Element Msg
 tablesView tables =
-    Element.wrappedRow
+    Element.column
         [ Element.spacing 10 ]
         (List.map
-            (\int ->
-                if NonEmpty.member int tables then
-                    UI.button []
-                        { onPress = RemoveTable int
-                        , label = String.fromInt int
-                        , backgroundColor = Element.hsl 212 1 0.47
-                        , shadowColor = Element.hsl 207 1 0.32
-                        }
+            (\list ->
+                Element.row [ Element.spacing 10 ] <|
+                    List.map
+                        (\int ->
+                            if NonEmpty.member int tables then
+                                UI.button [ Element.width <| Element.px 80 ]
+                                    { onPress = RemoveTable int
+                                    , label = String.fromInt int
+                                    , backgroundColor = Element.hsl 130 1 0.38
+                                    , shadowColor = Element.hsl 130 1 0.28
+                                    }
 
-                else
-                    UI.button []
-                        { onPress = RemoveTable int
-                        , label = String.fromInt int
-                        , backgroundColor = Element.hsl 0 0 0.5
-                        , shadowColor = Element.hsl 0 0 0.3
-                        }
+                            else
+                                UI.button [ Element.width <| Element.px 80 ]
+                                    { onPress = AddTable int
+                                    , label = String.fromInt int
+                                    , backgroundColor = Element.hsl 0 0 0.5
+                                    , shadowColor = Element.hsl 0 0 0.3
+                                    }
+                        )
+                        list
             )
-            (List.range 1 10)
+            (List.range 1 10 |> List.Extra.greedyGroupsOf 3)
         )
 
 
