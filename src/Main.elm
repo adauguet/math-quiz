@@ -3,15 +3,13 @@ module Main exposing (main)
 import AgainstTheClock
 import Browser
 import Element exposing (Element)
-import Element.Background as Background
-import Element.Border as Border
 import Element.Extra as Element
 import Element.Font as Font
-import Element.Input as Input
 import Html exposing (Html)
 import Lives
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
+import UI
 
 
 main : Program () Model Msg
@@ -139,21 +137,17 @@ view model =
                     , Element.spacing 100
                     ]
                     [ tablesView model.tables
-                    , Input.button
-                        [ Border.width 1
-                        , Border.rounded 3
-                        , Element.paddingXY 12 6
-                        ]
-                        { onPress = Just ClickLives
-                        , label = Element.text "3 vies"
+                    , UI.button []
+                        { onPress = ClickLives
+                        , label = "3 vies"
+                        , backgroundColor = Element.hsl 212 1 0.47
+                        , shadowColor = Element.hsl 207 1 0.32
                         }
-                    , Input.button
-                        [ Border.width 1
-                        , Border.rounded 3
-                        , Element.paddingXY 12 6
-                        ]
-                        { onPress = Just ClickAgainstTheClock
-                        , label = Element.text "Contre la montre"
+                    , UI.button []
+                        { onPress = ClickAgainstTheClock
+                        , label = "Contre la montre"
+                        , backgroundColor = Element.hsl 212 1 0.47
+                        , shadowColor = Element.hsl 207 1 0.32
                         }
                     ]
 
@@ -179,32 +173,24 @@ view model =
 
 tablesView : NonEmpty Int -> Element Msg
 tablesView tables =
-    Element.row
+    Element.wrappedRow
         [ Element.spacing 10 ]
         (List.map
             (\int ->
-                let
-                    attributes =
-                        [ Element.width (Element.px 60)
-                        , Element.height (Element.px 50)
-                        , Border.rounded 5
-                        , Font.center
-                        , Font.size 24
-                        , Font.color Element.white
-                        ]
-                in
                 if NonEmpty.member int tables then
-                    Input.button
-                        (Background.color (Element.hsl 217 1 0.5) :: attributes)
-                        { onPress = Just <| RemoveTable int
-                        , label = Element.text <| String.fromInt int
+                    UI.button []
+                        { onPress = RemoveTable int
+                        , label = String.fromInt int
+                        , backgroundColor = Element.hsl 212 1 0.47
+                        , shadowColor = Element.hsl 207 1 0.32
                         }
 
                 else
-                    Input.button
-                        (Background.color Element.gray :: attributes)
-                        { onPress = Just <| AddTable int
-                        , label = Element.text <| String.fromInt int
+                    UI.button []
+                        { onPress = RemoveTable int
+                        , label = String.fromInt int
+                        , backgroundColor = Element.hsl 0 0 0.5
+                        , shadowColor = Element.hsl 0 0 0.3
                         }
             )
             (List.range 1 10)
@@ -214,8 +200,9 @@ tablesView tables =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.page of
-        AgainstTheClock _ ->
-            AgainstTheClock.subscriptions |> Sub.map AgainstTheClockMsg
+        AgainstTheClock againstTheClockModel ->
+            AgainstTheClock.subscriptions againstTheClockModel
+                |> Sub.map AgainstTheClockMsg
 
         _ ->
             Sub.none

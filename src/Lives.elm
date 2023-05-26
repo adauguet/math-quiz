@@ -1,14 +1,12 @@
 module Lives exposing (..)
 
 import Element exposing (Element)
-import Element.Background as Background
-import Element.Border as Border
 import Element.Extra as Element
 import Element.Font as Font
-import Element.Input as Input
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
 import Random
+import UI
 
 
 type alias Model =
@@ -112,67 +110,23 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                 , Element.row [ Element.spacing 50 ]
                     (List.map
                         (\n ->
-                            Input.button
+                            UI.button
                                 [ Element.width (Element.px 100)
                                 , Element.height (Element.px 80)
-                                , Border.rounded 5
-                                , Font.center
-                                , Font.size 32
-                                , Font.center
-                                , Element.centerX
-                                , Border.rounded 12
-                                , Background.color <| Element.hsl 212 1 0.47
-                                , Font.color <| Element.white
-                                , Element.mouseOver
-                                    [ Element.moveUp 2
-                                    , Border.shadow
-                                        { offset = ( 0, 6 )
-                                        , size = 0
-                                        , blur = 0
-                                        , color = Element.hsl 207 1 0.32
-                                        }
-                                    ]
-                                , Border.shadow
-                                    { offset = ( 0, 4 )
-                                    , size = 0
-                                    , blur = 0
-                                    , color = Element.hsl 207 1 0.32
-                                    }
                                 ]
-                                { onPress = Just <| toParentMsg (Select n)
-                                , label = Element.text <| String.fromInt n
+                                { onPress = toParentMsg (Select n)
+                                , label = String.fromInt n
+                                , backgroundColor = Element.hsl 212 1 0.47
+                                , shadowColor = Element.hsl 207 1 0.32
                                 }
                         )
                         list
                     )
-                , Input.button
-                    [ Font.size 32
-
-                    -- , Element.width Element.fill
-                    , Font.center
-                    , Element.centerX
-                    , Border.rounded 12
-                    , Element.paddingXY 42 12
-                    , Background.color <| Element.hsl 345 1 0.47
-                    , Font.color Element.white
-                    , Element.mouseOver
-                        [ Element.moveUp 2
-                        , Border.shadow
-                            { offset = ( 0, 6 )
-                            , size = 0
-                            , blur = 0
-                            , color = Element.hsl 340 1 0.32
-                            }
-                        ]
-                    , Border.shadow
-                        { offset = ( 0, 4 )
-                        , size = 0
-                        , blur = 0
-                        , color = Element.hsl 340 1 0.32
-                        }
-                    ]
-                    { onPress = Just onClickHome
-                    , label = Element.text "Quitter"
+                , UI.button [ Element.centerX ]
+                    { onPress = onClickHome
+                    , label = "Quitter"
+                    , backgroundColor = Element.hsl 345 1 0.47
+                    , shadowColor = Element.hsl 340 1 0.32
                     }
                 ]
 
@@ -203,24 +157,18 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     Element.text <|
                         "Score : "
                             ++ String.fromInt model.score
-                , Input.button
-                    [ Font.size 30
-                    , Element.centerX
-                    , Border.width 1
-                    , Border.rounded 3
-                    , Element.paddingXY 20 10
+                , Element.column [ Element.spacing 20 ]
+                    [ UI.button [ Element.width Element.fill ]
+                        { onPress = onClickRestart
+                        , label = "Recommencer"
+                        , backgroundColor = Element.hsl 345 1 0.47
+                        , shadowColor = Element.hsl 340 1 0.32
+                        }
+                    , UI.button [ Element.width Element.fill ]
+                        { onPress = onClickHome
+                        , label = "Menu"
+                        , backgroundColor = Element.hsl 345 1 0.47
+                        , shadowColor = Element.hsl 340 1 0.32
+                        }
                     ]
-                    { onPress = Just onClickRestart
-                    , label = Element.text "Recommencer"
-                    }
-                , Input.button
-                    [ Font.size 30
-                    , Element.centerX
-                    , Border.width 1
-                    , Border.rounded 3
-                    , Element.paddingXY 20 10
-                    ]
-                    { onPress = Just onClickHome
-                    , label = Element.text "Menu principal"
-                    }
                 ]
