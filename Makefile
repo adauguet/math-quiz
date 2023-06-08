@@ -1,2 +1,2 @@
 run:
-	npx elm-watch hot
+	lamdera live

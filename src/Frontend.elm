@@ -4,17 +4,16 @@ import AgainstTheClock
 import Browser exposing (Document)
 import Browser.Navigation exposing (Key)
 import Element exposing (Attribute, Element)
-import Element.Background as Background
-import Element.Border as Border
 import Element.Extra as Element
 import Element.Font as Font
-import Element.Input as Input
 import Html exposing (Html)
 import Lamdera exposing (Url, UrlRequest)
+import List.Extra
 import Lives
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
 import Types exposing (FrontendModel, FrontendMsg(..), ToFrontend)
+import UI
 
 
 app :
@@ -151,25 +150,26 @@ view model =
                 Element.column
                     [ Element.centerX
                     , Element.centerY
-                    , Element.spacing 100
+                    , Element.spacing 50
                     ]
                     [ tablesView model.tables
-                    , Input.button
-                        [ Border.width 1
-                        , Border.rounded 3
-                        , Element.paddingXY 12 6
+                    , Element.column
+                        [ Element.width Element.fill
+                        , Element.spacing 20
                         ]
-                        { onPress = Just ClickLives
-                        , label = Element.text "3 vies"
-                        }
-                    , Input.button
-                        [ Border.width 1
-                        , Border.rounded 3
-                        , Element.paddingXY 12 6
+                        [ UI.button [ Element.width Element.fill ]
+                            { onPress = ClickLives
+                            , label = "3 vies"
+                            , backgroundColor = Element.hsl 212 1 0.47
+                            , shadowColor = Element.hsl 207 1 0.32
+                            }
+                        , UI.button [ Element.width Element.fill ]
+                            { onPress = ClickAgainstTheClock
+                            , label = "Contre la montre"
+                            , backgroundColor = Element.hsl 212 1 0.47
+                            , shadowColor = Element.hsl 207 1 0.32
+                            }
                         ]
-                        { onPress = Just ClickAgainstTheClock
-                        , label = Element.text "Contre la montre"
-                        }
                     ]
 
             Types.Lives livesModel ->
@@ -194,35 +194,32 @@ view model =
 
 tablesView : NonEmpty Int -> Element Msg
 tablesView tables =
-    Element.row
+    Element.column
         [ Element.spacing 10 ]
         (List.map
-            (\int ->
-                let
-                    attributes =
-                        [ Element.width (Element.px 60)
-                        , Element.height (Element.px 50)
-                        , Border.rounded 5
-                        , Font.center
-                        , Font.size 24
-                        , Font.color Element.white
-                        ]
-                in
-                if NonEmpty.member int tables then
-                    Input.button
-                        (Background.color (Element.hsl 217 1 0.5) :: attributes)
-                        { onPress = Just <| RemoveTable int
-                        , label = Element.text <| String.fromInt int
-                        }
+            (\list ->
+                Element.row [ Element.spacing 10 ] <|
+                    List.map
+                        (\int ->
+                            if NonEmpty.member int tables then
+                                UI.button [ Element.width <| Element.px 80 ]
+                                    { onPress = RemoveTable int
+                                    , label = String.fromInt int
+                                    , backgroundColor = Element.hsl 130 1 0.38
+                                    , shadowColor = Element.hsl 130 1 0.28
+                                    }
 
-                else
-                    Input.button
-                        (Background.color Element.gray :: attributes)
-                        { onPress = Just <| AddTable int
-                        , label = Element.text <| String.fromInt int
-                        }
+                            else
+                                UI.button [ Element.width <| Element.px 80 ]
+                                    { onPress = AddTable int
+                                    , label = String.fromInt int
+                                    , backgroundColor = Element.hsl 0 0 0.5
+                                    , shadowColor = Element.hsl 0 0 0.3
+                                    }
+                        )
+                        list
             )
-            (List.range 1 10)
+            (List.range 1 10 |> List.Extra.greedyGroupsOf 3)
         )
 
 
