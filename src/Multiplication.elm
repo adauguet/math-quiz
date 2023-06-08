@@ -16,7 +16,7 @@ generator nonEmpty =
         unique =
             Set.fromList >> Set.toList
     in
-    Random.map2 (\table int -> ( table, int )) (NonEmpty.generator nonEmpty) (Random.int 1 10)
+    Random.map2 (\table int -> ( table, int )) (NonEmpty.generator nonEmpty) (Random.int 0 10)
         |> Random.andThen
             (\( a, b ) ->
                 Random.List.shuffle (answers a b |> unique)
@@ -35,3 +35,4 @@ answers a b =
     , (a - 1) * b
     , (a + 1) * b
     ]
+        |> List.map abs
