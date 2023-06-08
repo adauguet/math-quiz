@@ -21,8 +21,7 @@ type Page
 
 
 type alias BackendModel =
-    { message : String
-    }
+    {}
 
 
 type FrontendMsg

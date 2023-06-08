@@ -3,7 +3,7 @@ module Frontend exposing (app)
 import AgainstTheClock
 import Browser exposing (Document)
 import Browser.Navigation exposing (Key)
-import Element exposing (Element)
+import Element exposing (Attribute, Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Extra as Element
@@ -29,8 +29,8 @@ app :
 app =
     Lamdera.frontend
         { init = init
-        , onUrlRequest = Types.UrlClicked
-        , onUrlChange = Types.UrlChanged
+        , onUrlRequest = UrlClicked
+        , onUrlChange = UrlChanged
         , update = update
         , updateFromBackend = updateFromBackend
         , subscriptions = subscriptions
@@ -143,6 +143,7 @@ view model =
         }
         [ Font.family [ Font.typeface "Bubblegum Sans" ]
         , Font.size 32
+        , importFont "https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=VT323&display=swap"
         ]
     <|
         case model.page of
@@ -223,6 +224,13 @@ tablesView tables =
             )
             (List.range 1 10)
         )
+
+
+importFont : String -> Attribute msg
+importFont url =
+    Html.node "style" [] [ Html.text <| "@import url('" ++ url ++ "')" ]
+        |> Element.html
+        |> Element.inFront
 
 
 subscriptions : Model -> Sub Msg

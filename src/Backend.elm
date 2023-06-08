@@ -1,13 +1,13 @@
 module Backend exposing (app)
 
-import Lamdera
-import Types exposing (BackendModel, BackendMsg(..))
+import Lamdera exposing (ClientId, SessionId)
+import Types exposing (BackendModel, BackendMsg(..), ToBackend)
 
 
 app :
     { init : ( BackendModel, Cmd BackendMsg )
     , update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
-    , updateFromFrontend : Lamdera.SessionId -> Lamdera.ClientId -> toBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
+    , updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
     , subscriptions : BackendModel -> Sub BackendMsg
     }
 app =
@@ -21,7 +21,7 @@ app =
 
 init : ( BackendModel, Cmd msg )
 init =
-    ( { message = "" }, Cmd.none )
+    ( {}, Cmd.none )
 
 
 update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
@@ -31,11 +31,11 @@ update msg model =
             ( model, Cmd.none )
 
 
-updateFromFrontend : Lamdera.SessionId -> Lamdera.ClientId -> toBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
+updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend _ _ _ backendModel =
     ( backendModel, Cmd.none )
 
 
 subscriptions : BackendModel -> Sub BackendMsg
-subscriptions model =
+subscriptions _ =
     Sub.none
