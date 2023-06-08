@@ -236,8 +236,8 @@ importFont url =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.page of
-        Types.AgainstTheClock _ ->
-            AgainstTheClock.subscriptions |> Sub.map AgainstTheClockMsg
+        Types.AgainstTheClock againstTheClockModel ->
+            AgainstTheClock.subscriptions againstTheClockModel |> Sub.map AgainstTheClockMsg
 
         _ ->
             Sub.none
