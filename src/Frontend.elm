@@ -1,6 +1,7 @@
 module Frontend exposing (app)
 
 import AgainstTheClock
+import BestScores
 import Browser exposing (Document)
 import Browser.Navigation exposing (Key)
 import Element exposing (Attribute, Element)
@@ -12,7 +13,7 @@ import List.Extra
 import Lives
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
-import Types exposing (FrontendModel, FrontendMsg(..), ToFrontend)
+import Types exposing (FrontendModel, FrontendMsg(..), Page(..), ToFrontend(..))
 import UI
 
 
@@ -85,6 +86,18 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        BestScoresMsg bestScoresMsg ->
+            case model.page of
+                Types.BestScores _ ->
+                    let
+                        m =
+                            BestScores.update bestScoresMsg
+                    in
+                    ( { model | page = BestScores m }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
         ClickLives ->
             let
                 ( m, cmd ) =
@@ -98,6 +111,13 @@ update msg model =
                     AgainstTheClock.init model.tables
             in
             ( { model | page = Types.AgainstTheClock m }, Cmd.map AgainstTheClockMsg cmd )
+
+        ClickBestScores ->
+            let
+                ( m, cmd ) =
+                    BestScores.init
+            in
+            ( { model | page = Types.BestScores m }, Cmd.map BestScoresMsg cmd )
 
         RemoveTable table ->
             case NonEmpty.filter (\x -> x /= table) model.tables of
@@ -125,8 +145,13 @@ update msg model =
 
 
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
-updateFromBackend _ model =
-    ( model, Cmd.none )
+updateFromBackend toFrontend model =
+    case ( toFrontend, model.page ) of
+        ( SendScores scores, BestScores _ ) ->
+            ( { model | page = BestScores scores }, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -169,6 +194,12 @@ view model =
                             , backgroundColor = Element.hsl 212 1 0.47
                             , shadowColor = Element.hsl 207 1 0.32
                             }
+                        , UI.button [ Element.width Element.fill ]
+                            { onPress = ClickBestScores
+                            , label = "Meilleurs scores"
+                            , backgroundColor = Element.hsl 212 1 0.47
+                            , shadowColor = Element.hsl 207 1 0.32
+                            }
                         ]
                     ]
 
@@ -188,8 +219,8 @@ view model =
                     }
                     againstTheClockModel
 
-            Types.Settings ->
-                Element.text "Settings"
+            Types.BestScores bestScoresModel ->
+                BestScores.view bestScoresModel
 
 
 tablesView : NonEmpty Int -> Element Msg

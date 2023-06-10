@@ -1,10 +1,13 @@
 module Types exposing (..)
 
-import AgainstTheClock
+import BestScores.Types as BestScores
 import Lamdera exposing (Url, UrlRequest)
 import Lives
-import Multiplication exposing (Multiplication(..))
+import Multiplication exposing (Multiplication)
 import NonEmpty exposing (NonEmpty)
+import Player exposing (Player)
+import Score exposing (SavedScore, Score)
+import Time exposing (Posix)
 
 
 type alias FrontendModel =
@@ -15,20 +18,37 @@ type alias FrontendModel =
 
 type Page
     = Home
-    | AgainstTheClock AgainstTheClock.Model
+    | AgainstTheClock AgainstTheClockModel
     | Lives Lives.Model
-    | Settings
+    | BestScores BestScores.Model
+
+
+type alias AgainstTheClockModel =
+    { state : AgainstTheClockState
+    , tables : NonEmpty Int
+    , score : Int
+    , remainingTime : Int
+    }
+
+
+type AgainstTheClockState
+    = Loading Player
+    | ChoosePlayer
+    | Playing Player Multiplication
+    | GameOver Player
 
 
 type alias BackendModel =
-    {}
+    List SavedScore
 
 
 type FrontendMsg
     = LivesMsg Lives.Msg
-    | AgainstTheClockMsg AgainstTheClock.Msg
+    | AgainstTheClockMsg AgainstTheClockMsg
+    | BestScoresMsg BestScores.Msg
     | ClickLives
     | ClickAgainstTheClock
+    | ClickBestScores
     | RemoveTable Int
     | AddTable Int
     | ClickHome
@@ -36,13 +56,21 @@ type FrontendMsg
     | UrlClicked UrlRequest
 
 
+type AgainstTheClockMsg
+    = GotMultiplication Multiplication
+    | Select Int
+    | Tick
+    | ClickedPlayer Player
+
+
 type ToBackend
-    = NoOpToBackend
+    = SaveScore Score
+    | GetScores
 
 
 type BackendMsg
-    = NoOpBackendMsg
+    = GotTime Score Posix
 
 
 type ToFrontend
-    = NoOpToFrontend
+    = SendScores (List SavedScore)

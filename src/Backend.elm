@@ -1,7 +1,9 @@
 module Backend exposing (app)
 
-import Lamdera exposing (ClientId, SessionId)
-import Types exposing (BackendModel, BackendMsg(..), ToBackend)
+import Lamdera exposing (ClientId, SessionId, sendToFrontend)
+import Task
+import Time
+import Types exposing (BackendModel, BackendMsg(..), ToBackend(..), ToFrontend(..))
 
 
 app :
@@ -21,19 +23,24 @@ app =
 
 init : ( BackendModel, Cmd msg )
 init =
-    ( {}, Cmd.none )
+    ( [], Cmd.none )
 
 
 update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
-update msg model =
+update msg scores =
     case msg of
-        NoOpBackendMsg ->
-            ( model, Cmd.none )
+        GotTime score now ->
+            ( { timestamp = now, score = score } :: scores, Cmd.none )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
-updateFromFrontend _ _ _ backendModel =
-    ( backendModel, Cmd.none )
+updateFromFrontend _ clientId toBackend scores =
+    case toBackend of
+        SaveScore score ->
+            ( scores, Task.perform (GotTime score) Time.now )
+
+        GetScores ->
+            ( scores, sendToFrontend clientId (SendScores scores) )
 
 
 subscriptions : BackendModel -> Sub BackendMsg
