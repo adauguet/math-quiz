@@ -1,58 +1,62 @@
-module Main exposing (main)
+module Frontend exposing (app)
 
 import AgainstTheClock
-import Browser
-import Element exposing (Element)
+import BestScores
+import Browser exposing (Document)
+import Browser.Navigation exposing (Key)
+import Element exposing (Attribute, Element)
 import Element.Extra as Element
 import Element.Font as Font
 import Html exposing (Html)
+import Lamdera exposing (Url, UrlRequest)
 import List.Extra
 import Lives
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
+import Types exposing (FrontendModel, FrontendMsg(..), Page(..), ToFrontend(..))
 import UI
 
 
-main : Program () Model Msg
-main =
-    Browser.element
+app :
+    { init : Lamdera.Url -> Key -> ( Model, Cmd Msg )
+    , view : Model -> Document Msg
+    , update : Msg -> Model -> ( Model, Cmd Msg )
+    , updateFromBackend : ToFrontend -> Model -> ( Model, Cmd Msg )
+    , subscriptions : Model -> Sub Msg
+    , onUrlRequest : UrlRequest -> Msg
+    , onUrlChange : Url -> Msg
+    }
+app =
+    Lamdera.frontend
         { init = init
-        , view = view
+        , onUrlRequest = UrlClicked
+        , onUrlChange = UrlChanged
         , update = update
+        , updateFromBackend = updateFromBackend
         , subscriptions = subscriptions
+        , view =
+            \model ->
+                { title = "Lamdera"
+                , body = [ view model ]
+                }
         }
 
 
 type alias Model =
-    { page : Page
-    , tables : NonEmpty Int
-    }
+    FrontendModel
 
 
-type Page
-    = Home
-    | AgainstTheClock AgainstTheClock.Model
-    | Lives Lives.Model
-    | Settings
+type alias Msg =
+    FrontendMsg
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { page = Home
+init : Lamdera.Url -> Key -> ( Model, Cmd Msg )
+init _ _ =
+    ( { page = Types.Home
       , tables = NonEmpty.make 1 [ 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
       }
     , Cmd.none
     )
-
-
-type Msg
-    = LivesMsg Lives.Msg
-    | AgainstTheClockMsg AgainstTheClock.Msg
-    | ClickLives
-    | ClickAgainstTheClock
-    | RemoveTable Int
-    | AddTable Int
-    | ClickHome
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -60,24 +64,36 @@ update msg model =
     case msg of
         LivesMsg livesMsg ->
             case model.page of
-                Lives livesModel ->
+                Types.Lives livesModel ->
                     let
                         ( m, cmd ) =
                             Lives.update livesMsg livesModel
                     in
-                    ( { model | page = Lives m }, Cmd.map LivesMsg cmd )
+                    ( { model | page = Types.Lives m }, Cmd.map LivesMsg cmd )
 
                 _ ->
                     ( model, Cmd.none )
 
         AgainstTheClockMsg againstTheClockMsg ->
             case model.page of
-                AgainstTheClock againstTheClockModel ->
+                Types.AgainstTheClock againstTheClockModel ->
                     let
                         ( m, cmd ) =
                             AgainstTheClock.update againstTheClockMsg againstTheClockModel
                     in
-                    ( { model | page = AgainstTheClock m }, Cmd.map AgainstTheClockMsg cmd )
+                    ( { model | page = Types.AgainstTheClock m }, Cmd.map AgainstTheClockMsg cmd )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        BestScoresMsg bestScoresMsg ->
+            case model.page of
+                Types.BestScores _ ->
+                    let
+                        m =
+                            BestScores.update bestScoresMsg
+                    in
+                    ( { model | page = BestScores m }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -87,14 +103,21 @@ update msg model =
                 ( m, cmd ) =
                     Lives.init model.tables
             in
-            ( { model | page = Lives m }, Cmd.map LivesMsg cmd )
+            ( { model | page = Types.Lives m }, Cmd.map LivesMsg cmd )
 
         ClickAgainstTheClock ->
             let
                 ( m, cmd ) =
                     AgainstTheClock.init model.tables
             in
-            ( { model | page = AgainstTheClock m }, Cmd.map AgainstTheClockMsg cmd )
+            ( { model | page = Types.AgainstTheClock m }, Cmd.map AgainstTheClockMsg cmd )
+
+        ClickBestScores ->
+            let
+                ( m, cmd ) =
+                    BestScores.init
+            in
+            ( { model | page = Types.BestScores m }, Cmd.map BestScoresMsg cmd )
 
         RemoveTable table ->
             case NonEmpty.filter (\x -> x /= table) model.tables of
@@ -112,7 +135,23 @@ update msg model =
             ( { model | tables = tables }, Cmd.none )
 
         ClickHome ->
-            ( { model | page = Home }, Cmd.none )
+            ( { model | page = Types.Home }, Cmd.none )
+
+        UrlChanged _ ->
+            ( model, Cmd.none )
+
+        UrlClicked _ ->
+            ( model, Cmd.none )
+
+
+updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
+updateFromBackend toFrontend model =
+    case ( toFrontend, model.page ) of
+        ( SendScores scores, BestScores _ ) ->
+            ( { model | page = BestScores scores }, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -128,10 +167,11 @@ view model =
         }
         [ Font.family [ Font.typeface "Bubblegum Sans" ]
         , Font.size 32
+        , importFont "https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=VT323&display=swap"
         ]
     <|
         case model.page of
-            Home ->
+            Types.Home ->
                 Element.column
                     [ Element.centerX
                     , Element.centerY
@@ -142,22 +182,22 @@ view model =
                         [ Element.width Element.fill
                         , Element.spacing 20
                         ]
-                        [ UI.button [ Element.width Element.fill ]
+                        [ UI.blueButton [ Element.width Element.fill ]
                             { onPress = ClickLives
                             , label = "3 vies"
-                            , backgroundColor = Element.hsl 212 1 0.47
-                            , shadowColor = Element.hsl 207 1 0.32
                             }
-                        , UI.button [ Element.width Element.fill ]
+                        , UI.blueButton [ Element.width Element.fill ]
                             { onPress = ClickAgainstTheClock
                             , label = "Contre la montre"
-                            , backgroundColor = Element.hsl 212 1 0.47
-                            , shadowColor = Element.hsl 207 1 0.32
+                            }
+                        , UI.blueButton [ Element.width Element.fill ]
+                            { onPress = ClickBestScores
+                            , label = "Meilleurs scores"
                             }
                         ]
                     ]
 
-            Lives livesModel ->
+            Types.Lives livesModel ->
                 Lives.view
                     { toParentMsg = LivesMsg
                     , onClickRestart = ClickLives
@@ -165,7 +205,7 @@ view model =
                     }
                     livesModel
 
-            AgainstTheClock againstTheClockModel ->
+            Types.AgainstTheClock againstTheClockModel ->
                 AgainstTheClock.view
                     { toParentMsg = AgainstTheClockMsg
                     , onClickRestart = ClickAgainstTheClock
@@ -173,8 +213,10 @@ view model =
                     }
                     againstTheClockModel
 
-            Settings ->
-                Element.text "Settings"
+            Types.BestScores bestScoresModel ->
+                BestScores.view
+                    { onClickHome = ClickHome }
+                    bestScoresModel
 
 
 tablesView : NonEmpty Int -> Element Msg
@@ -187,19 +229,15 @@ tablesView tables =
                     List.map
                         (\int ->
                             if NonEmpty.member int tables then
-                                UI.button [ Element.width <| Element.px 80 ]
+                                UI.greenButton [ Element.width <| Element.px 80 ]
                                     { onPress = RemoveTable int
                                     , label = String.fromInt int
-                                    , backgroundColor = Element.hsl 130 1 0.38
-                                    , shadowColor = Element.hsl 130 1 0.28
                                     }
 
                             else
-                                UI.button [ Element.width <| Element.px 80 ]
+                                UI.grayButton [ Element.width <| Element.px 80 ]
                                     { onPress = AddTable int
                                     , label = String.fromInt int
-                                    , backgroundColor = Element.hsl 0 0 0.5
-                                    , shadowColor = Element.hsl 0 0 0.3
                                     }
                         )
                         list
@@ -208,12 +246,18 @@ tablesView tables =
         )
 
 
+importFont : String -> Attribute msg
+importFont url =
+    Html.node "style" [] [ Html.text <| "@import url('" ++ url ++ "')" ]
+        |> Element.html
+        |> Element.inFront
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.page of
-        AgainstTheClock againstTheClockModel ->
-            AgainstTheClock.subscriptions againstTheClockModel
-                |> Sub.map AgainstTheClockMsg
+        Types.AgainstTheClock againstTheClockModel ->
+            AgainstTheClock.subscriptions againstTheClockModel |> Sub.map AgainstTheClockMsg
 
         _ ->
             Sub.none
