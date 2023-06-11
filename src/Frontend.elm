@@ -182,23 +182,17 @@ view model =
                         [ Element.width Element.fill
                         , Element.spacing 20
                         ]
-                        [ UI.button [ Element.width Element.fill ]
+                        [ UI.blueButton [ Element.width Element.fill ]
                             { onPress = ClickLives
                             , label = "3 vies"
-                            , backgroundColor = Element.hsl 212 1 0.47
-                            , shadowColor = Element.hsl 207 1 0.32
                             }
-                        , UI.button [ Element.width Element.fill ]
+                        , UI.blueButton [ Element.width Element.fill ]
                             { onPress = ClickAgainstTheClock
                             , label = "Contre la montre"
-                            , backgroundColor = Element.hsl 212 1 0.47
-                            , shadowColor = Element.hsl 207 1 0.32
                             }
-                        , UI.button [ Element.width Element.fill ]
+                        , UI.blueButton [ Element.width Element.fill ]
                             { onPress = ClickBestScores
                             , label = "Meilleurs scores"
-                            , backgroundColor = Element.hsl 212 1 0.47
-                            , shadowColor = Element.hsl 207 1 0.32
                             }
                         ]
                     ]
@@ -220,7 +214,9 @@ view model =
                     againstTheClockModel
 
             Types.BestScores bestScoresModel ->
-                BestScores.view bestScoresModel
+                BestScores.view
+                    { onClickHome = ClickHome }
+                    bestScoresModel
 
 
 tablesView : NonEmpty Int -> Element Msg
@@ -233,19 +229,15 @@ tablesView tables =
                     List.map
                         (\int ->
                             if NonEmpty.member int tables then
-                                UI.button [ Element.width <| Element.px 80 ]
+                                UI.greenButton [ Element.width <| Element.px 80 ]
                                     { onPress = RemoveTable int
                                     , label = String.fromInt int
-                                    , backgroundColor = Element.hsl 130 1 0.38
-                                    , shadowColor = Element.hsl 130 1 0.28
                                     }
 
                             else
-                                UI.button [ Element.width <| Element.px 80 ]
+                                UI.grayButton [ Element.width <| Element.px 80 ]
                                     { onPress = AddTable int
                                     , label = String.fromInt int
-                                    , backgroundColor = Element.hsl 0 0 0.5
-                                    , shadowColor = Element.hsl 0 0 0.3
                                     }
                         )
                         list

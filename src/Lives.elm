@@ -107,26 +107,22 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                             String.fromInt model.score
                     ]
                 , Element.text <| String.fromInt table ++ " x " ++ String.fromInt int ++ " ="
-                , Element.row [ Element.spacing 50 ]
+                , Element.row [ Element.spacing 20 ]
                     (List.map
                         (\n ->
-                            UI.button
+                            UI.blueButton
                                 [ Element.width (Element.px 100)
                                 , Element.height (Element.px 80)
                                 ]
                                 { onPress = toParentMsg (Select n)
                                 , label = String.fromInt n
-                                , backgroundColor = Element.hsl 212 1 0.47
-                                , shadowColor = Element.hsl 207 1 0.32
                                 }
                         )
                         list
                     )
-                , UI.button [ Element.centerX ]
+                , UI.redButton [ Element.centerX ]
                     { onPress = onClickHome
                     , label = "Quitter"
-                    , backgroundColor = Element.hsl 345 1 0.47
-                    , shadowColor = Element.hsl 340 1 0.32
                     }
                 ]
 
@@ -158,17 +154,13 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                         "Score : "
                             ++ String.fromInt model.score
                 , Element.column [ Element.spacing 20 ]
-                    [ UI.button [ Element.width Element.fill ]
+                    [ UI.redButton [ Element.width Element.fill ]
                         { onPress = onClickRestart
                         , label = "Recommencer"
-                        , backgroundColor = Element.hsl 345 1 0.47
-                        , shadowColor = Element.hsl 340 1 0.32
                         }
-                    , UI.button [ Element.width Element.fill ]
+                    , UI.redButton [ Element.width Element.fill ]
                         { onPress = onClickHome
                         , label = "Menu"
-                        , backgroundColor = Element.hsl 345 1 0.47
-                        , shadowColor = Element.hsl 340 1 0.32
                         }
                     ]
                 ]

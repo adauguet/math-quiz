@@ -1,5 +1,6 @@
 module Env exposing (..)
 
 
-someServiceApiKey =
-    "testing-key-abc123"
+a : String
+a =
+    ""
