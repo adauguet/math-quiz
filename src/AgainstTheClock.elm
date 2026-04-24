@@ -141,7 +141,7 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                 , Element.centerX
                 , Element.centerY
                 , Element.padding 20
-                , Element.width Element.fill
+                , Element.width (Element.px 500)
                 ]
                 [ Element.row
                     [ Element.spacing 50
