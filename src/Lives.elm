@@ -131,7 +131,7 @@ view { toParentMsg, onClickRestart, onClickHome } model =
 
         Playing state (Multiplication a b list) ->
             Element.column
-                [ Element.spacing 100
+                [ Element.spacing 80
                 , Element.centerX
                 , Element.centerY
                 , Element.paddingXY 30 30
@@ -146,7 +146,7 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                         Element.text <|
                             String.fromInt (score model.answered)
                     ]
-                , Element.text <| String.fromInt a ++ " x " ++ String.fromInt b ++ " ="
+                , Element.el [ Element.centerX, Font.size 64 ] <| Element.text <| String.fromInt a ++ " x " ++ String.fromInt b
                 , Element.wrappedRow [ Element.spacing 20 ]
                     (List.map
                         (\option ->

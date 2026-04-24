@@ -3,8 +3,9 @@ module BestScores.Types exposing (..)
 import Score exposing (SavedScore)
 
 
-type alias Model =
-    List SavedScore
+type Model
+    = Loading
+    | Loaded (List SavedScore)
 
 
 type Msg

@@ -1,12 +1,11 @@
 module Types exposing (..)
 
 import BestScores.Types as BestScores
-import Lamdera exposing (Url, UrlRequest)
+import Lamdera exposing (ClientId, Url, UrlRequest)
 import Lives
 import Multiplication exposing (Multiplication)
 import NonEmpty exposing (NonEmpty)
-import Player exposing (Player)
-import Score exposing (SavedScore, Score)
+import Score exposing (SavedScore)
 import Time exposing (Posix)
 
 
@@ -32,10 +31,15 @@ type alias AgainstTheClockModel =
 
 
 type AgainstTheClockState
-    = Loading Player
-    | ChoosePlayer
-    | Playing Player Multiplication
-    | GameOver Player
+    = Loading
+    | Playing Multiplication
+    | GameOver GameOverState
+
+
+type GameOverState
+    = Idle String
+    | Submitting
+    | Submitted
 
 
 type alias BackendModel =
@@ -60,17 +64,23 @@ type AgainstTheClockMsg
     = GotMultiplication Multiplication
     | Select Int
     | Tick
-    | ClickedPlayer Player
+    | DidInputPlayer String
+    | SubmitScore
 
 
 type ToBackend
-    = SaveScore Score
+    = SaveScore String Int
     | GetScores
 
 
 type BackendMsg
-    = GotTime Score Posix
+    = GotTime ClientId String Int Posix
 
 
 type ToFrontend
     = SendScores (List SavedScore)
+    | AgainstTheClockToFrontEnd AgainstTheClockToFrontEnd
+
+
+type AgainstTheClockToFrontEnd
+    = SavedScore

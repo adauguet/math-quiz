@@ -1,32 +1,26 @@
-module Score exposing (SavedScore, Score, byValue, compare)
+module Score exposing (SavedScore, byValue, compare)
 
-import Player exposing (Player(..))
 import Time exposing (Posix)
-
-
-type alias Score =
-    { player : Player
-    , score : Int
-    }
 
 
 type alias SavedScore =
     { timestamp : Posix
-    , score : Score
+    , player : String
+    , score : Int
     }
 
 
 byValue : SavedScore -> Int
 byValue { score } =
-    -score.score
+    -score
 
 
 compare : SavedScore -> SavedScore -> Order
 compare a b =
-    if a.score.score > b.score.score then
+    if a.score > b.score then
         GT
 
-    else if a.score.score < b.score.score then
+    else if a.score < b.score then
         LT
 
     else if Time.posixToMillis a.timestamp < Time.posixToMillis b.timestamp then

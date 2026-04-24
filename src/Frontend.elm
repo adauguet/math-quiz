@@ -2,6 +2,7 @@ module Frontend exposing (app)
 
 import AgainstTheClock
 import BestScores
+import BestScores.Types as BestScores
 import Browser exposing (Document)
 import Browser.Navigation exposing (Key)
 import Element exposing (Attribute, Element)
@@ -148,7 +149,14 @@ updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
 updateFromBackend toFrontend model =
     case ( toFrontend, model.page ) of
         ( SendScores scores, BestScores _ ) ->
-            ( { model | page = BestScores scores }, Cmd.none )
+            ( { model | page = BestScores (BestScores.Loaded scores) }, Cmd.none )
+
+        ( AgainstTheClockToFrontEnd againstTheClockToFrontEnd, AgainstTheClock againstTheClockModel ) ->
+            let
+                ( m, cmd ) =
+                    AgainstTheClock.updateFromBackend againstTheClockToFrontEnd againstTheClockModel
+            in
+            ( { model | page = AgainstTheClock m }, Cmd.map AgainstTheClockMsg cmd )
 
         _ ->
             ( model, Cmd.none )

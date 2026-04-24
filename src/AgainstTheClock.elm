@@ -4,22 +4,25 @@ module AgainstTheClock exposing
     , init
     , subscriptions
     , update
+    , updateFromBackend
     , view
     )
 
 import Element exposing (Element)
 import Element.Extra as Element
 import Element.Font as Font
+import Element.Input as Input
 import Lamdera exposing (sendToBackend)
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
-import Player exposing (Player(..))
 import Random
 import Time
 import Types
     exposing
         ( AgainstTheClockMsg(..)
         , AgainstTheClockState(..)
+        , AgainstTheClockToFrontEnd(..)
+        , GameOverState(..)
         , ToBackend(..)
         )
 import UI
@@ -31,12 +34,12 @@ type alias Model =
 
 init : NonEmpty Int -> ( Model, Cmd Msg )
 init tables =
-    ( { state = ChoosePlayer
+    ( { state = Loading
       , tables = tables
       , score = 0
       , remainingTime = 60
       }
-    , Cmd.none
+    , generateMultiplication tables
     )
 
 
@@ -49,55 +52,63 @@ update msg model =
     case msg of
         GotMultiplication multiplication ->
             case model.state of
-                Loading player ->
-                    ( { model | state = Playing player multiplication }, Cmd.none )
+                Loading ->
+                    ( { model | state = Playing multiplication }, Cmd.none )
 
-                Playing player _ ->
-                    ( { model | state = Playing player multiplication }, Cmd.none )
+                Playing _ ->
+                    ( { model | state = Playing multiplication }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
-        ClickedPlayer player ->
-            ( { model | state = Loading player }, generateMultiplication model.tables )
-
         Select answer ->
             case model.state of
-                Playing player (Multiplication a b _) ->
+                Playing (Multiplication a b _) ->
                     if answer == a * b then
                         ( { model
-                            | state = Loading player
+                            | state = Loading
                             , score = model.score + 1
                           }
                         , generateMultiplication model.tables
                         )
 
                     else
-                        let
-                            score =
-                                { player = player, score = model.score }
-                        in
-                        ( { model | state = GameOver player }, sendToBackend (SaveScore score) )
+                        ( { model | state = GameOver (Idle "") }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         Tick ->
             case model.state of
-                Playing player _ ->
+                Playing _ ->
                     let
                         newTime =
                             model.remainingTime - 1
                     in
                     if newTime <= 0 then
-                        let
-                            score =
-                                { player = player, score = model.score }
-                        in
-                        ( { model | state = GameOver player }, sendToBackend (SaveScore score) )
+                        ( { model | state = GameOver (Idle "") }, Cmd.none )
 
                     else
                         ( { model | remainingTime = newTime }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        DidInputPlayer player ->
+            case model.state of
+                GameOver _ ->
+                    ( { model | state = GameOver (Idle player) }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        SubmitScore ->
+            case model.state of
+                GameOver (Idle "") ->
+                    ( model, Cmd.none )
+
+                GameOver (Idle player) ->
+                    ( { model | state = GameOver Submitting }, sendToBackend (SaveScore player model.score) )
 
                 _ ->
                     ( model, Cmd.none )
@@ -117,38 +128,20 @@ view :
     -> Element parentMsg
 view { toParentMsg, onClickRestart, onClickHome } model =
     case model.state of
-        Loading _ ->
+        Loading ->
             Element.column
                 [ Element.centerX
                 , Element.centerY
                 ]
                 [ Element.text "Chargement ..." ]
 
-        ChoosePlayer ->
-            let
-                playerButton player =
-                    UI.greenButton []
-                        { onPress = toParentMsg <| ClickedPlayer player
-                        , label = Player.toString player
-                        }
-            in
+        Playing (Multiplication table int list) ->
             Element.column
-                [ Element.centerX
-                , Element.centerY
-                , Element.spacing 20
-                ]
-                [ Element.text "Choisis le joueur"
-                , Element.row [ Element.spacing 10 ]
-                    [ playerButton Joseph
-                    , playerButton Thomas
-                    ]
-                ]
-
-        Playing player (Multiplication table int list) ->
-            Element.column
-                [ Element.spacing 100
+                [ Element.spacing 80
                 , Element.centerX
                 , Element.centerY
+                , Element.padding 20
+                , Element.width Element.fill
                 ]
                 [ Element.row
                     [ Element.spacing 50
@@ -156,17 +149,11 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     , Element.width Element.fill
                     ]
                     [ Element.text (String.fromInt model.remainingTime)
-                    , Element.row [ Element.alignRight, Element.spacing 10 ]
-                        [ Element.text <| Player.toString player
-                        , Element.el
-                            [ Element.width (Element.px 50)
-                            , Font.alignRight
-                            ]
-                            (Element.text <| String.fromInt model.score)
-                        ]
+                    , Element.el [ Element.alignRight ]
+                        (Element.text <| String.fromInt model.score)
                     ]
-                , Element.text <| String.fromInt table ++ " x " ++ String.fromInt int ++ " ="
-                , Element.row [ Element.spacing 20 ]
+                , Element.el [ Element.centerX, Font.size 64 ] <| Element.text <| String.fromInt table ++ " x " ++ String.fromInt int
+                , Element.wrappedRow [ Element.spacing 20 ]
                     (List.map
                         (\n ->
                             UI.blueButton
@@ -185,11 +172,12 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     }
                 ]
 
-        GameOver _ ->
+        GameOver gameOverState ->
             Element.column
                 [ Element.centerX
                 , Element.centerY
                 , Element.spacing 50
+                , Element.padding 20
                 ]
                 [ Element.el
                     [ Font.heavy
@@ -209,12 +197,32 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     , Element.centerX
                     ]
                     (Element.text <| "Score : " ++ String.fromInt model.score)
+                , case gameOverState of
+                    Idle player ->
+                        Element.row [ Element.centerX, Element.spacing 20 ]
+                            [ Input.text [ Element.width (Element.fill |> Element.maximum 200) ]
+                                { onChange = DidInputPlayer >> toParentMsg
+                                , text = player
+                                , placeholder = Nothing
+                                , label = Input.labelHidden "Nom du joueur"
+                                }
+                            , UI.blueButton []
+                                { onPress = toParentMsg SubmitScore
+                                , label = "Envoyer"
+                                }
+                            ]
+
+                    Submitting ->
+                        Element.el [ Element.centerX ] (Element.text "Envoi en cours ...")
+
+                    Submitted ->
+                        Element.el [ Element.centerX ] (Element.text "Score enregistré")
                 , Element.column [ Element.spacing 20, Element.centerX ]
-                    [ UI.redButton [ Element.width Element.fill ]
+                    [ UI.blueButton [ Element.width Element.fill ]
                         { onPress = onClickRestart
                         , label = "Recommencer"
                         }
-                    , UI.redButton [ Element.width Element.fill ]
+                    , UI.blueButton [ Element.width Element.fill ]
                         { onPress = onClickHome
                         , label = "Menu"
                         }
@@ -225,8 +233,15 @@ view { toParentMsg, onClickRestart, onClickHome } model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.state of
-        Playing _ _ ->
+        Playing _ ->
             Time.every 1000 (\_ -> Tick)
 
         _ ->
             Sub.none
+
+
+updateFromBackend : AgainstTheClockToFrontEnd -> Model -> ( Model, Cmd Msg )
+updateFromBackend toFrontEnd model =
+    case toFrontEnd of
+        SavedScore ->
+            ( { model | state = GameOver Submitted }, Cmd.none )

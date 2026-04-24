@@ -1,10 +1,9 @@
 module BestScores exposing (..)
 
-import BestScores.Types as BestScores exposing (Msg(..))
+import BestScores.Types as BestScores exposing (Model(..), Msg(..))
 import Element exposing (Element)
 import Element.Font as Font
 import Lamdera exposing (sendToBackend)
-import Player
 import Score
 import Types exposing (ToBackend(..))
 import UI
@@ -16,7 +15,7 @@ type alias Model =
 
 init : ( Model, Cmd BestScores.Msg )
 init =
-    ( [], sendToBackend GetScores )
+    ( Loading, sendToBackend GetScores )
 
 
 type alias Msg =
@@ -27,44 +26,49 @@ update : Msg -> Model
 update msg =
     case msg of
         GotScores scores ->
-            scores
+            Loaded scores
 
 
 view : { onClickHome : parentMsg } -> Model -> Element parentMsg
-view { onClickHome } scores =
+view { onClickHome } model =
     Element.column
         [ Element.centerX
-        , Element.paddingXY 0 50
+        , Element.padding 50
         , Element.spacing 50
+        , Element.height Element.fill
         ]
         [ Element.el
             [ Element.width Element.fill
+            , Element.centerX
             , Font.center
             ]
             (Element.text "Meilleurs scores")
-        , case scores of
-            [] ->
-                Element.text "Pas encore de scores !"
+        , case model of
+            Loading ->
+                Element.el [ Element.centerX ] (Element.text "Chargement ...")
 
-            list ->
+            Loaded [] ->
+                Element.el [ Element.centerX ] (Element.text "Pas encore de scores !")
+
+            Loaded list ->
                 list
                     |> List.sortWith (flipped <| Score.compare)
                     |> List.take 10
                     |> List.map
-                        (\{ score } ->
+                        (\{ player, score } ->
                             Element.row
                                 [ Element.spacing 10
                                 , Element.width Element.fill
                                 ]
-                                [ Element.text <| Player.toString score.player
-                                , Element.el [ Element.alignRight ] <| Element.text <| String.fromInt score.score
+                                [ Element.text player
+                                , Element.el [ Element.alignRight ] <| Element.text <| String.fromInt score
                                 ]
                         )
                     |> Element.column
                         [ Element.spacing 10
                         , Element.width Element.fill
                         ]
-        , UI.redButton [ Element.centerX ]
+        , UI.redButton [ Element.centerX, Element.alignBottom ]
             { onPress = onClickHome
             , label = "Retour au menu"
             }

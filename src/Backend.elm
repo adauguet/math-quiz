@@ -2,10 +2,9 @@ module Backend exposing (app)
 
 import Env exposing (..)
 import Lamdera exposing (ClientId, SessionId, sendToFrontend)
-import Player exposing (Player(..))
 import Task
 import Time
-import Types exposing (BackendModel, BackendMsg(..), ToBackend(..), ToFrontend(..))
+import Types exposing (AgainstTheClockToFrontEnd(..), BackendModel, BackendMsg(..), ToBackend(..), ToFrontend(..))
 
 
 app :
@@ -31,22 +30,28 @@ init =
 
         Development ->
             [ { timestamp = Time.millisToPosix 1
-              , score = { player = Joseph, score = 1 }
+              , player = "Joseph"
+              , score = 1
               }
             , { timestamp = Time.millisToPosix 2
-              , score = { player = Joseph, score = 2 }
+              , player = "Joseph"
+              , score = 2
               }
             , { timestamp = Time.millisToPosix 3
-              , score = { player = Joseph, score = 5 }
+              , player = "Joseph"
+              , score = 5
               }
             , { timestamp = Time.millisToPosix 4
-              , score = { player = Joseph, score = 3 }
+              , player = "Joseph"
+              , score = 3
               }
             , { timestamp = Time.millisToPosix 5
-              , score = { player = Joseph, score = 4 }
+              , player = "Joseph"
+              , score = 4
               }
             , { timestamp = Time.millisToPosix 6
-              , score = { player = Thomas, score = 4 }
+              , player = "Thomas"
+              , score = 4
               }
             ]
     , Cmd.none
@@ -56,15 +61,15 @@ init =
 update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 update msg scores =
     case msg of
-        GotTime score now ->
-            ( { timestamp = now, score = score } :: scores, Cmd.none )
+        GotTime clientId player score now ->
+            ( { timestamp = now, player = player, score = score } :: scores, sendToFrontend clientId (AgainstTheClockToFrontEnd SavedScore) )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend _ clientId toBackend scores =
     case toBackend of
-        SaveScore score ->
-            ( scores, Task.perform (GotTime score) Time.now )
+        SaveScore player score ->
+            ( scores, Task.perform (GotTime clientId player score) Time.now )
 
         GetScores ->
             ( scores, sendToFrontend clientId (SendScores scores) )
