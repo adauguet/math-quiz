@@ -220,7 +220,12 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     [ Element.height (Element.fill |> Element.maximum 300)
                     , Element.centerX
                     ]
-                    { src = filePath |> Maybe.withDefault "", description = "" }
+                    { src =
+                        filePath
+                            |> Maybe.map (\fp -> "./" ++ fp)
+                            |> Maybe.withDefault ""
+                    , description = ""
+                    }
                 , Element.el
                     [ Font.size 30
                     , Element.centerX
@@ -251,4 +256,3 @@ gifGenerator =
         , "zootopia-judy.gif"
         , "zootopia.gif"
         ]
-        |> Random.map (\fileName -> "./img/" ++ fileName)
