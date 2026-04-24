@@ -222,7 +222,7 @@ view model =
 tablesView : NonEmpty Int -> Element Msg
 tablesView tables =
     Element.column
-        [ Element.spacing 10 ]
+        [ Element.spacing 15 ]
         (List.map
             (\list ->
                 Element.row [ Element.spacing 10 ] <|

@@ -1,4 +1,4 @@
-module UI exposing (blueButton, grayButton, greenButton, redButton)
+module UI exposing (blue, blueButton, gray, grayButton, green, greenButton, lightGray, red, redButton, tile)
 
 import Element exposing (Attribute, Color, Element)
 import Element.Background as Background
@@ -8,13 +8,58 @@ import Element.Font as Font
 import Element.Input as Input
 
 
+red : Color
+red =
+    Element.hsl 345 1 0.47
+
+
+darkRed : Color
+darkRed =
+    Element.hsl 340 1 0.32
+
+
+green : Color
+green =
+    Element.hsl 130 1 0.38
+
+
+darkGreen : Color
+darkGreen =
+    Element.hsl 130 1 0.28
+
+
+blue : Color
+blue =
+    Element.hsl 212 1 0.47
+
+
+darkBlue : Color
+darkBlue =
+    Element.hsl 207 1 0.32
+
+
+lightGray : Color
+lightGray =
+    Element.hsl 0 0 0.7
+
+
+gray : Color
+gray =
+    Element.hsl 0 0 0.5
+
+
+darkGray : Color
+darkGray =
+    Element.hsl 0 0 0.3
+
+
 greenButton : List (Attribute msg) -> { onPress : msg, label : String } -> Element msg
 greenButton attributes { onPress, label } =
     button attributes
         { onPress = onPress
         , label = label
-        , backgroundColor = Element.hsl 130 1 0.38
-        , shadowColor = Element.hsl 130 1 0.28
+        , backgroundColor = green
+        , shadowColor = darkGreen
         }
 
 
@@ -23,8 +68,8 @@ blueButton attributes { onPress, label } =
     button attributes
         { onPress = onPress
         , label = label
-        , backgroundColor = Element.hsl 212 1 0.47
-        , shadowColor = Element.hsl 207 1 0.32
+        , backgroundColor = blue
+        , shadowColor = darkBlue
         }
 
 
@@ -33,8 +78,8 @@ redButton attributes { onPress, label } =
     button attributes
         { onPress = onPress
         , label = label
-        , backgroundColor = Element.hsl 345 1 0.47
-        , shadowColor = Element.hsl 340 1 0.32
+        , backgroundColor = red
+        , shadowColor = darkRed
         }
 
 
@@ -43,8 +88,8 @@ grayButton attributes { onPress, label } =
     button attributes
         { onPress = onPress
         , label = label
-        , backgroundColor = Element.hsl 0 0 0.5
-        , shadowColor = Element.hsl 0 0 0.3
+        , backgroundColor = gray
+        , shadowColor = darkGray
         }
 
 
@@ -65,17 +110,17 @@ button attributes { onPress, label, backgroundColor, shadowColor } =
          , Element.paddingXY 24 12
          , Background.color backgroundColor
          , Font.color <| Element.white
-         , Element.mouseOver
-            [ Element.moveUp 2
+         , Element.mouseDown
+            [ Element.moveDown 4
             , Border.shadow
-                { offset = ( 0, 6 )
+                { offset = ( 0, 2 )
                 , size = 0
                 , blur = 0
                 , color = shadowColor
                 }
             ]
          , Border.shadow
-            { offset = ( 0, 4 )
+            { offset = ( 0, 6 )
             , size = 0
             , blur = 0
             , color = shadowColor
@@ -86,3 +131,26 @@ button attributes { onPress, label, backgroundColor, shadowColor } =
         { onPress = Just onPress
         , label = Element.text label
         }
+
+
+tile :
+    { label : String
+    , backgroundColor : Color
+    }
+    -> Element msg
+tile { label, backgroundColor } =
+    Element.el
+        [ Background.color backgroundColor
+        , Border.rounded 12
+        , Element.height (Element.px 80)
+        , Element.width (Element.px 100)
+        , Font.center
+        , Font.color <| Element.white
+        , Font.size 32
+        ]
+        (Element.el
+            [ Element.centerX
+            , Element.centerY
+            ]
+            (Element.text label)
+        )
