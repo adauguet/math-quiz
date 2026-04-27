@@ -1,4 +1,4 @@
-module NonEmpty exposing (NonEmpty, append, filter, generator, make, member)
+module NonEmpty exposing (NonEmpty(..), append, filter, generator, make, member)
 
 import Random exposing (Generator)
 
