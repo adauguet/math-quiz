@@ -183,9 +183,8 @@ view { toParentMsg, onClickRestart, onClickHome } model =
 
         Playing state (Multiplication a b list) ->
             Element.column
-                [ Element.spacing 80
+                [ Element.spacing 60
                 , Element.centerX
-                , Element.centerY
                 , Element.paddingXY 30 30
                 ]
                 [ Element.row
@@ -292,7 +291,7 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     ]
                     (Element.text "GAME OVER")
                 , Element.image
-                    [ Element.height (Element.fill |> Element.maximum 300)
+                    [ Element.height (Element.fill |> Element.maximum 200)
                     , Element.centerX
                     ]
                     { src =
