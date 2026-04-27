@@ -70,7 +70,7 @@ view { onClickHome } model =
                         ]
         , UI.redButton [ Element.centerX, Element.alignBottom ]
             { onPress = onClickHome
-            , label = "Retour au menu"
+            , label = Element.text "Retour au menu"
             }
         ]
 

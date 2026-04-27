@@ -1,4 +1,16 @@
-module UI exposing (blue, blueButton, gray, grayButton, green, greenButton, lightGray, red, redButton, tile)
+module UI exposing
+    ( blue
+    , blueButton
+    , darkBlue
+    , gray
+    , grayButton
+    , green
+    , greenButton
+    , lightGray
+    , red
+    , redButton
+    , tile
+    )
 
 import Element exposing (Attribute, Color, Element)
 import Element.Background as Background
@@ -53,7 +65,7 @@ darkGray =
     Element.hsl 0 0 0.3
 
 
-greenButton : List (Attribute msg) -> { onPress : msg, label : String } -> Element msg
+greenButton : List (Attribute msg) -> { onPress : msg, label : Element msg } -> Element msg
 greenButton attributes { onPress, label } =
     button attributes
         { onPress = onPress
@@ -63,7 +75,7 @@ greenButton attributes { onPress, label } =
         }
 
 
-blueButton : List (Attribute msg) -> { onPress : msg, label : String } -> Element msg
+blueButton : List (Attribute msg) -> { onPress : msg, label : Element msg } -> Element msg
 blueButton attributes { onPress, label } =
     button attributes
         { onPress = onPress
@@ -73,7 +85,7 @@ blueButton attributes { onPress, label } =
         }
 
 
-redButton : List (Attribute msg) -> { onPress : msg, label : String } -> Element msg
+redButton : List (Attribute msg) -> { onPress : msg, label : Element msg } -> Element msg
 redButton attributes { onPress, label } =
     button attributes
         { onPress = onPress
@@ -83,7 +95,7 @@ redButton attributes { onPress, label } =
         }
 
 
-grayButton : List (Attribute msg) -> { onPress : msg, label : String } -> Element msg
+grayButton : List (Attribute msg) -> { onPress : msg, label : Element msg } -> Element msg
 grayButton attributes { onPress, label } =
     button attributes
         { onPress = onPress
@@ -97,7 +109,7 @@ button :
     List (Attribute msg)
     ->
         { onPress : msg
-        , label : String
+        , label : Element msg
         , backgroundColor : Color
         , shadowColor : Color
         }
@@ -129,7 +141,7 @@ button attributes { onPress, label, backgroundColor, shadowColor } =
             ++ attributes
         )
         { onPress = Just onPress
-        , label = Element.text label
+        , label = label
         }
 
 

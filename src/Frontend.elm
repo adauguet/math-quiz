@@ -192,15 +192,15 @@ view model =
                         ]
                         [ UI.blueButton [ Element.width Element.fill ]
                             { onPress = ClickLives
-                            , label = "3 vies"
+                            , label = Element.text "3 vies"
                             }
                         , UI.blueButton [ Element.width Element.fill ]
                             { onPress = ClickAgainstTheClock
-                            , label = "Contre la montre"
+                            , label = Element.text "Contre la montre"
                             }
                         , UI.blueButton [ Element.width Element.fill ]
                             { onPress = ClickBestScores
-                            , label = "Meilleurs scores"
+                            , label = Element.text "Meilleurs scores"
                             }
                         ]
                     ]
@@ -239,13 +239,13 @@ tablesView tables =
                             if NonEmpty.member int tables then
                                 UI.greenButton [ Element.width <| Element.px 80 ]
                                     { onPress = RemoveTable int
-                                    , label = String.fromInt int
+                                    , label = Element.text <| String.fromInt int
                                     }
 
                             else
                                 UI.grayButton [ Element.width <| Element.px 80 ]
                                     { onPress = AddTable int
-                                    , label = String.fromInt int
+                                    , label = Element.text <| String.fromInt int
                                     }
                         )
                         list
@@ -266,6 +266,9 @@ subscriptions model =
     case model.page of
         Types.AgainstTheClock againstTheClockModel ->
             AgainstTheClock.subscriptions againstTheClockModel |> Sub.map AgainstTheClockMsg
+
+        Types.Lives livesModel ->
+            Lives.subscriptions livesModel |> Sub.map LivesMsg
 
         _ ->
             Sub.none

@@ -1,11 +1,14 @@
 module Lives exposing (..)
 
 import Element exposing (Element)
+import Element.Background as Background
+import Element.Border as Border
 import Element.Extra as Element
 import Element.Font as Font
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
 import Random exposing (Generator)
+import Time
 import UI
 
 
@@ -43,7 +46,11 @@ type State
 
 type PlayingState
     = Idle
-    | Answered Int
+    | Answered
+        { answer : Int
+        , since : Int
+        , wait : Int
+        }
 
 
 init : NonEmpty Int -> ( Model, Cmd Msg )
@@ -61,6 +68,7 @@ type Msg
     | Select Int
     | Next
     | GotGameOverGif String
+    | GotTime Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -83,7 +91,19 @@ update msg model =
                         ( { m | state = GameOver Nothing }, generateGameOverGif )
 
                     else
-                        ( { m | state = Playing (Answered answer) multiplication }, Cmd.none )
+                        ( { m
+                            | state =
+                                Playing
+                                    (Answered
+                                        { answer = answer
+                                        , since = 0
+                                        , wait = waitForAnswer multiplication answer
+                                        }
+                                    )
+                                    multiplication
+                          }
+                        , Cmd.none
+                        )
 
                 Playing (Answered _) _ ->
                     ( model, Cmd.none )
@@ -102,6 +122,27 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        GotTime delta ->
+            case model.state of
+                Playing (Answered ({ since, wait } as data)) multiplication ->
+                    if since < wait then
+                        ( { model | state = Playing (Answered { data | since = since + delta }) multiplication }, Cmd.none )
+
+                    else
+                        ( { model | state = Loading }, generateMultiplication model.tables )
+
+                _ ->
+                    ( model, Cmd.none )
+
+
+waitForAnswer : Multiplication -> Int -> Int
+waitForAnswer (Multiplication a b _) answer =
+    if a * b == answer then
+        1000
+
+    else
+        5000
+
 
 generateMultiplication : NonEmpty Int -> Cmd Msg
 generateMultiplication tables =
@@ -111,6 +152,17 @@ generateMultiplication tables =
 generateGameOverGif : Cmd Msg
 generateGameOverGif =
     Random.generate GotGameOverGif gifGenerator
+
+
+gifGenerator : Generator String
+gifGenerator =
+    Random.uniform "judy-hopps-zootopia.gif"
+        [ "zootopia-bunny.gif"
+        , "zootopia-judy-2.gif"
+        , "zootopia-judy-hopps.gif"
+        , "zootopia-judy.gif"
+        , "zootopia.gif"
+        ]
 
 
 view :
@@ -157,10 +209,10 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                                         , Element.height (Element.px 80)
                                         ]
                                         { onPress = toParentMsg (Select option)
-                                        , label = String.fromInt option
+                                        , label = Element.text <| String.fromInt option
                                         }
 
-                                Answered answer ->
+                                Answered { answer } ->
                                     UI.tile
                                         { label = String.fromInt option
                                         , backgroundColor =
@@ -180,19 +232,41 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     quitButton =
                         UI.redButton [ Element.alignLeft ]
                             { onPress = onClickHome
-                            , label = "Quitter"
+                            , label = Element.text "Quitter"
                             }
                   in
                   case state of
                     Idle ->
                         quitButton
 
-                    Answered _ ->
-                        Element.row [ Element.width Element.fill ]
+                    Answered { since, wait } ->
+                        Element.row [ Element.width Element.fill, Element.spacing 10 ]
                             [ quitButton
-                            , UI.blueButton [ Element.alignRight ]
+                            , UI.blueButton
+                                [ Element.behindContent
+                                    (Element.row
+                                        [ Element.height Element.fill
+                                        , Element.width Element.fill
+                                        , Element.clip
+                                        , Border.rounded 12
+                                        ]
+                                        [ Element.el
+                                            [ Background.color UI.darkBlue
+                                            , Element.width (Element.fillPortion since)
+                                            , Element.height Element.fill
+                                            ]
+                                            Element.none
+                                        , Element.el
+                                            [ Background.color UI.blue
+                                            , Element.width (Element.fillPortion (wait - since))
+                                            , Element.height Element.fill
+                                            ]
+                                            Element.none
+                                        ]
+                                    )
+                                ]
                                 { onPress = toParentMsg Next
-                                , label = "Continuer"
+                                , label = Element.text "Continuer"
                                 }
                             ]
                 ]
@@ -202,6 +276,7 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                 [ Element.centerX
                 , Element.centerY
                 , Element.spacing 50
+                , Element.paddingXY 10 20
                 ]
                 [ Element.el
                     [ Font.heavy
@@ -230,29 +305,44 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                     [ Font.size 30
                     , Element.centerX
                     ]
-                  <|
-                    Element.text <|
-                        "Score : "
-                            ++ String.fromInt (score model.answered)
+                    (Element.text <| "Score : " ++ String.fromInt (score model.answered))
+                , Element.column [ Element.centerX ]
+                    (List.map
+                        (\( Multiplication a b _, answer ) ->
+                            let
+                                color =
+                                    if a * b == answer then
+                                        UI.green
+
+                                    else
+                                        UI.red
+                            in
+                            Element.el
+                                [ Font.color color
+                                ]
+                                (Element.text (String.fromInt a ++ " x " ++ String.fromInt b))
+                        )
+                        model.answered
+                    )
                 , Element.column [ Element.spacing 20, Element.centerX ]
                     [ UI.blueButton [ Element.width Element.fill ]
                         { onPress = onClickRestart
-                        , label = "Recommencer"
+                        , label = Element.text "Recommencer"
                         }
                     , UI.blueButton [ Element.width Element.fill ]
                         { onPress = onClickHome
-                        , label = "Menu"
+                        , label = Element.text "Menu"
                         }
                     ]
                 ]
 
 
-gifGenerator : Generator String
-gifGenerator =
-    Random.uniform "judy-hopps-zootopia.gif"
-        [ "zootopia-bunny.gif"
-        , "zootopia-judy-2.gif"
-        , "zootopia-judy-hopps.gif"
-        , "zootopia-judy.gif"
-        , "zootopia.gif"
-        ]
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.state of
+        Playing (Answered _) _ ->
+            -- Sub.none
+            Time.every 5 (\_ -> GotTime 5)
+
+        _ ->
+            Sub.none

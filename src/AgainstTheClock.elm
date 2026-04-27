@@ -161,14 +161,14 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                                 , Element.height (Element.px 80)
                                 ]
                                 { onPress = toParentMsg (Select n)
-                                , label = String.fromInt n
+                                , label = Element.text <| String.fromInt n
                                 }
                         )
                         list
                     )
                 , UI.redButton [ Element.centerX ]
                     { onPress = onClickHome
-                    , label = "Quitter"
+                    , label = Element.text "Quitter"
                     }
                 ]
 
@@ -208,7 +208,7 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                                 }
                             , UI.blueButton []
                                 { onPress = toParentMsg SubmitScore
-                                , label = "Envoyer"
+                                , label = Element.text "Envoyer"
                                 }
                             ]
 
@@ -220,11 +220,11 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                 , Element.column [ Element.spacing 20, Element.centerX ]
                     [ UI.blueButton [ Element.width Element.fill ]
                         { onPress = onClickRestart
-                        , label = "Recommencer"
+                        , label = Element.text "Recommencer"
                         }
                     , UI.blueButton [ Element.width Element.fill ]
                         { onPress = onClickHome
-                        , label = "Menu"
+                        , label = Element.text "Menu"
                         }
                     ]
                 ]
