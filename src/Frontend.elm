@@ -14,6 +14,7 @@ import List.Extra
 import Lives
 import Multiplication exposing (Multiplication(..))
 import NonEmpty exposing (NonEmpty)
+import Practice
 import Types exposing (FrontendModel, FrontendMsg(..), Page(..), ToFrontend(..))
 import UI
 
@@ -87,6 +88,18 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        PracticeMsg practiceMsg ->
+            case model.page of
+                Types.Practice practiceModel ->
+                    let
+                        ( m, cmd ) =
+                            Practice.update practiceMsg practiceModel
+                    in
+                    ( { model | page = Types.Practice m }, Cmd.map PracticeMsg cmd )
+
+                _ ->
+                    ( model, Cmd.none )
+
         BestScoresMsg bestScoresMsg ->
             case model.page of
                 Types.BestScores _ ->
@@ -112,6 +125,13 @@ update msg model =
                     AgainstTheClock.init model.tables
             in
             ( { model | page = Types.AgainstTheClock m }, Cmd.map AgainstTheClockMsg cmd )
+
+        ClickPractice ->
+            let
+                ( m, cmd ) =
+                    Practice.init model.tables
+            in
+            ( { model | page = Types.Practice m }, Cmd.map PracticeMsg cmd )
 
         ClickBestScores ->
             let
@@ -199,6 +219,10 @@ view model =
                             , label = Element.text "Contre la montre"
                             }
                         , UI.blueButton [ Element.width Element.fill ]
+                            { onPress = ClickPractice
+                            , label = Element.text "Entraînement"
+                            }
+                        , UI.blueButton [ Element.width Element.fill ]
                             { onPress = ClickBestScores
                             , label = Element.text "Meilleurs scores"
                             }
@@ -220,6 +244,13 @@ view model =
                     , onClickHome = ClickHome
                     }
                     againstTheClockModel
+
+            Types.Practice practiceModel ->
+                Practice.view
+                    { toParentMsg = PracticeMsg
+                    , onClickHome = ClickHome
+                    }
+                    practiceModel
 
             Types.BestScores bestScoresModel ->
                 BestScores.view
@@ -269,6 +300,9 @@ subscriptions model =
 
         Types.Lives livesModel ->
             Lives.subscriptions livesModel |> Sub.map LivesMsg
+
+        Types.Practice practiceModel ->
+            Practice.subscriptions practiceModel |> Sub.map PracticeMsg
 
         _ ->
             Sub.none

@@ -5,6 +5,7 @@ import Lamdera exposing (ClientId, Url, UrlRequest)
 import Lives
 import Multiplication exposing (Multiplication)
 import NonEmpty exposing (NonEmpty)
+import Practice.Types as Practice
 import Score exposing (SavedScore)
 import Time exposing (Posix)
 
@@ -19,6 +20,7 @@ type Page
     = Home
     | AgainstTheClock AgainstTheClockModel
     | Lives Lives.Model
+    | Practice Practice.Model
     | BestScores BestScores.Model
 
 
@@ -50,8 +52,10 @@ type FrontendMsg
     = LivesMsg Lives.Msg
     | AgainstTheClockMsg AgainstTheClockMsg
     | BestScoresMsg BestScores.Msg
+    | PracticeMsg Practice.Msg
     | ClickLives
     | ClickAgainstTheClock
+    | ClickPractice
     | ClickBestScores
     | RemoveTable Int
     | AddTable Int
