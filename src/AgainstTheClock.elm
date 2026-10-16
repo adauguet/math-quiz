@@ -137,11 +137,9 @@ view { toParentMsg, onClickRestart, onClickHome } model =
 
         Playing (Multiplication table int list) ->
             Element.column
-                [ Element.spacing 80
+                [ Element.spacing 60
                 , Element.centerX
-                , Element.centerY
-                , Element.padding 20
-                , Element.width Element.fill
+                , Element.paddingXY 30 30
                 ]
                 [ Element.row
                     [ Element.spacing 50
