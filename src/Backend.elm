@@ -2,6 +2,7 @@ module Backend exposing (app)
 
 import Env exposing (..)
 import Lamdera exposing (ClientId, SessionId, sendToFrontend)
+import Score
 import Task
 import Time
 import Types exposing (AgainstTheClockToFrontEnd(..), BackendModel, BackendMsg(..), ToBackend(..), ToFrontend(..))
@@ -64,6 +65,9 @@ update msg scores =
         GotTime clientId player score now ->
             ( { timestamp = now, player = player, score = score } :: scores, sendToFrontend clientId (AgainstTheClockToFrontEnd SavedScore) )
 
+        GotScoresTime clientId now ->
+            ( scores, sendToFrontend clientId (SendScores (List.filter (isSameWeek now) scores)) )
+
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend _ clientId toBackend scores =
@@ -72,7 +76,31 @@ updateFromFrontend _ clientId toBackend scores =
             ( scores, Task.perform (GotTime clientId player score) Time.now )
 
         GetScores ->
-            ( scores, sendToFrontend clientId (SendScores scores) )
+            ( scores, Task.perform (GotScoresTime clientId) Time.now )
+
+
+{-| Whether a score was saved during the week of `now`. Weeks start on Monday
+at 00:00 UTC, so best scores reset every week. Older scores are kept.
+-}
+isSameWeek : Time.Posix -> Score.SavedScore -> Bool
+isSameWeek now { timestamp } =
+    Time.posixToMillis timestamp >= startOfWeek now
+
+
+startOfWeek : Time.Posix -> Int
+startOfWeek now =
+    let
+        dayMillis =
+            24 * 60 * 60 * 1000
+
+        days =
+            Time.posixToMillis now // dayMillis
+
+        -- The epoch, 1970-01-01, was a Thursday.
+        daysSinceMonday =
+            modBy 7 (days + 3)
+    in
+    (days - daysSinceMonday) * dayMillis
 
 
 subscriptions : BackendModel -> Sub BackendMsg

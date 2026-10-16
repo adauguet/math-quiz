@@ -44,13 +44,13 @@ view { onClickHome } model =
             , Element.centerX
             , Font.center
             ]
-            (Element.text "Meilleurs scores")
+            (Element.text "Meilleurs scores de la semaine")
         , case model of
             Loading ->
                 Element.el [ Element.centerX ] (Element.text "Chargement ...")
 
             Loaded [] ->
-                Element.el [ Element.centerX ] (Element.text "Pas encore de scores !")
+                Element.el [ Element.centerX ] (Element.text "Pas encore de scores cette semaine !")
 
             Loaded list ->
                 list

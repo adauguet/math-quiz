@@ -79,6 +79,7 @@ type ToBackend
 
 type BackendMsg
     = GotTime ClientId String Int Posix
+    | GotScoresTime ClientId Posix
 
 
 type ToFrontend
