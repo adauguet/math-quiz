@@ -11,7 +11,6 @@ import Element exposing (Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
-import Env
 import Html.Attributes
 import Mistakes
 import Multiplication exposing (Multiplication(..))
@@ -154,14 +153,14 @@ view :
     -> Model
     -> Element msg
 view config model =
-    case ( Env.mode, model.state ) of
-        ( Env.Development, Playing _ _ ) ->
+    case model.state of
+        Playing _ _ ->
             withDebug config model
 
-        ( Env.Development, Finished ) ->
+        Finished ->
             withDebug config model
 
-        _ ->
+        Loading ->
             gameView config model
 
 
