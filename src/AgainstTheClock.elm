@@ -80,7 +80,10 @@ update msg model =
 
         Tick ->
             case model.state of
-                Playing _ ->
+                GameOver _ ->
+                    ( model, Cmd.none )
+
+                _ ->
                     let
                         newTime =
                             model.remainingTime - 1
@@ -90,9 +93,6 @@ update msg model =
 
                     else
                         ( { model | remainingTime = newTime }, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
 
         DidInputPlayer player ->
             case model.state of
@@ -231,15 +231,22 @@ view { toParentMsg, onClickRestart, onClickHome } model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.state of
-        Playing _ ->
-            Time.every 1000 (\_ -> Tick)
+        -- The clock also runs while the next question loads: stopping it
+        -- would restart the current second after each answer.
+        GameOver _ ->
+            Sub.none
 
         _ ->
-            Sub.none
+            Time.every 1000 (\_ -> Tick)
 
 
 updateFromBackend : AgainstTheClockToFrontEnd -> Model -> ( Model, Cmd Msg )
 updateFromBackend toFrontEnd model =
     case toFrontEnd of
         SavedScore ->
-            ( { model | state = GameOver Submitted }, Cmd.none )
+            case model.state of
+                GameOver Submitting ->
+                    ( { model | state = GameOver Submitted }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
