@@ -1,10 +1,12 @@
 module Element.Extra exposing
-    ( gray
+    ( centeredWrappedRow
+    , gray
     , hsl
     , white
     )
 
-import Element exposing (Color)
+import Element exposing (Color, Element)
+import Html.Attributes
 
 
 hsl : Float -> Float -> Float -> Color
@@ -54,3 +56,19 @@ white =
 gray : Color
 gray =
     hsl 0 0 0.5
+
+
+{-| A wrapped row whose lines are centered, so that wrapped items stay centered
+on narrow screens.
+
+`Element.wrappedRow` with `Element.spacing` nests the row in a wrapper element
+and keeps its items left-aligned, so the spacing is set with CSS `gap` instead.
+
+-}
+centeredWrappedRow : Int -> List (Element msg) -> Element msg
+centeredWrappedRow spacing =
+    Element.wrappedRow
+        [ Element.centerX
+        , Element.htmlAttribute (Html.Attributes.style "justify-content" "center")
+        , Element.htmlAttribute (Html.Attributes.style "gap" (String.fromInt spacing ++ "px"))
+        ]

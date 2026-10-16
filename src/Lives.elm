@@ -198,7 +198,7 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                             String.fromInt (score model.answered)
                     ]
                 , Element.el [ Element.centerX, Font.size 64 ] <| Element.text <| String.fromInt a ++ " x " ++ String.fromInt b
-                , Element.wrappedRow [ Element.spacing 20 ]
+                , Element.centeredWrappedRow 20
                     (List.map
                         (\option ->
                             case state of

@@ -3,6 +3,7 @@ module BestScores exposing (..)
 import BestScores.Types as BestScores exposing (Model(..), Msg(..))
 import Element exposing (Element)
 import Element.Font as Font
+import Html.Attributes
 import Lamdera exposing (sendToBackend)
 import Score
 import Types exposing (ToBackend(..))
@@ -33,7 +34,8 @@ view : { onClickHome : parentMsg } -> Model -> Element parentMsg
 view { onClickHome } model =
     Element.column
         [ Element.centerX
-        , Element.padding 50
+        , Element.width (Element.fill |> Element.maximum 500)
+        , Element.paddingXY 30 50
         , Element.spacing 50
         , Element.height Element.fill
         ]
@@ -60,7 +62,11 @@ view { onClickHome } model =
                                 [ Element.spacing 10
                                 , Element.width Element.fill
                                 ]
-                                [ Element.text player
+                                [ Element.el
+                                    [ Element.width Element.fill
+                                    , Element.htmlAttribute (Html.Attributes.style "overflow" "hidden")
+                                    ]
+                                    (Element.text player)
                                 , Element.el [ Element.alignRight ] <| Element.text <| String.fromInt score
                                 ]
                         )

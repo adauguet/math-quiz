@@ -10,6 +10,7 @@ module Practice exposing
 import Element exposing (Element)
 import Element.Background as Background
 import Element.Border as Border
+import Element.Extra as Element
 import Element.Font as Font
 import Html.Attributes
 import Mistakes
@@ -264,7 +265,11 @@ debugView model =
         [ Element.centerX
         , Element.spacing 6
         , Element.padding 10
-        , Element.width (Element.shrink |> Element.maximum 900)
+        , Element.width Element.shrink
+
+        -- Caps the panel to the screen width so it scrolls horizontally on
+        -- mobile instead of overflowing on both sides.
+        , Element.htmlAttribute (Html.Attributes.style "max-width" "100%")
 
         -- elm-ui sizes column children with `flex-basis: 0px` and
         -- `min-height: min-content`. Firefox gives a scrolling element an
@@ -329,7 +334,7 @@ gameView { toParentMsg, onClickHome } model =
                             String.fromInt (score model.answered)
                     ]
                 , Element.el [ Element.centerX, Font.size 64 ] <| Element.text <| String.fromInt a ++ " x " ++ String.fromInt b
-                , Element.wrappedRow [ Element.spacing 20 ]
+                , Element.centeredWrappedRow 20
                     (List.map
                         (\option ->
                             case state of

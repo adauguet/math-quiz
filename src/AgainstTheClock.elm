@@ -151,7 +151,7 @@ view { toParentMsg, onClickRestart, onClickHome } model =
                         (Element.text <| String.fromInt model.score)
                     ]
                 , Element.el [ Element.centerX, Font.size 64 ] <| Element.text <| String.fromInt table ++ " x " ++ String.fromInt int
-                , Element.wrappedRow [ Element.spacing 20 ]
+                , Element.centeredWrappedRow 20
                     (List.map
                         (\n ->
                             UI.blueButton
